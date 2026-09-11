@@ -342,7 +342,7 @@ jobs:
           path: homebrew-tap
           # Credentials stay persisted here because the push below needs them,
           # and every step in this job is first-party shell.
-          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          token: ${{ secrets.FERRY_HOMEBREW_UPDATER }}
 
       - name: Download tested formula
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
