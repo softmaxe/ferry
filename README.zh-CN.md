@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/ferry-logo.png" alt="Ferry 标志：搭载桌面窗口的渡船" width="180">
+</p>
+
 <h1 align="center">ferry</h1>
 
 <p align="center">
@@ -6,7 +10,7 @@
 </p>
 
 把 macOS 当前焦点窗口移到另一个 Space，并切换过去。相当于把
-`yabai -m window --space N --focus` 单独做成一个 40 KB 的二进制文件。
+`yabai -m window --space N --focus` 单独做成一条命令。
 
 ```sh
 ferry 3
@@ -14,14 +18,14 @@ ferry 3
 
 - 每次调用运行一次就退出。没有常驻进程，没有 launchd 服务，没有配置文件。
 - 不需要 scripting addition，系统完整性保护（SIP）保持开启。
-- 在 Apple silicon Mac 上每次调用 30 到 45 ms。
+- 用 `--verbose` 查看移动耗时和总运行时间。
 - 附带 Space 1 到 5 的 Raycast Script Commands。
 
 我写它是因为以前只知道 yabai 能做这件事，但我只用 yabai 几百条命令里的一条，却要跑它的整个服务。ferry 只保留这一条命令背后的代码，其余全部去掉。
 
 ## 安装
 
-ferry 只支持 Apple silicon 上的 macOS 26（Tahoe）。
+ferry 只支持 Apple silicon 上的 macOS 26 Tahoe。
 
 ```sh
 brew install softmaxe/tap/ferry
@@ -39,7 +43,7 @@ brew install softmaxe/tap/ferry
    ferry 2
    ```
 
-   终端窗口会移到 Space 2，屏幕也跟着切过去。在终端里运行时，移动的总是终端自己，因为按下回车时它就是焦点窗口。要移动其他窗口，请给 ferry 绑定快捷键。
+   终端窗口会移到 Space 2，屏幕也跟着切过去。在终端里运行时，通常移动的是终端自己，因为按下回车时它就是焦点窗口。要移动其他窗口，请给 ferry 绑定快捷键，或传入 `--window <id>`。
 
 ## 用 Raycast 绑定快捷键
 
@@ -54,7 +58,7 @@ git clone https://github.com/softmaxe/ferry.git ~/ferry
 
 要支持 Space 6 及以后，复制一个脚本，同时修改 `space=` 和 `@raycast.title` 这一行。
 
-脚本会依次在 `PATH`、`/opt/homebrew/bin`、`/usr/local/bin`、`$HOME/.local/bin` 和本项目的 `build/` 中查找 `ferry`。如果二进制文件在其他位置，可以指定路径：
+脚本会依次在 `PATH`、`/opt/homebrew/bin`、`/usr/local/bin`、`$HOME/.local/bin` 和本项目的 `build/` 中查找 `ferry`。如果二进制文件在其他位置，在运行脚本的环境中设置 `FERRY_BINARY`。使用 Raycast 时，把下面的 export 加到每个复制后的脚本里，放在查找二进制文件的代码之前。在终端执行 export 只会影响从该 shell 启动的命令：
 
 ```sh
 export FERRY_BINARY="/path/to/ferry"
@@ -63,15 +67,15 @@ export FERRY_BINARY="/path/to/ferry"
 ## 使用
 
 ```sh
-ferry 3                 # 把焦点窗口移到 Space 3 并跟过去
-ferry --no-follow 3     # 只移动窗口，停在当前 Space
-ferry --verbose 3       # 同时输出窗口 ID 和耗时
-ferry --window 1234 3   # 移动窗口 1234，而不是焦点窗口
+ferry 3                 # move the focused window to Space 3 and follow it
+ferry --no-follow 3     # move it and stay on the current Space
+ferry --verbose 3       # also print the window ID and timing
+ferry --window 1234 3   # move window 1234 instead of the focused window
 ```
 
 Space 编号从 1 开始，按调度中心的顺序数所有显示器上的所有 Space，和 `yabai -m query --spaces` 输出的 `index` 字段一致。ferry 不会新建 Space，目标 Space 必须已经存在。
 
-成功时 ferry 不输出任何内容，错误信息写到 stderr。退出码：成功为 `0`，移动失败为 `1`，参数错误为 `2`。
+移动成功后，ferry 默认不输出内容；加上 `--verbose` 会输出详情。`--help` 和 `--version` 也会输出到 stdout。错误信息写到 stderr。退出码：成功为 `0`，移动失败为 `1`，参数错误为 `2`。
 
 ## 常见问题
 
@@ -84,7 +88,7 @@ Space 编号从 1 开始，按调度中心的顺序数所有显示器上的所�
 | `unsupported macOS version` | ferry 只支持 macOS 26。 |
 | 移动的不是想要的窗口 | 给运行 ferry 的 App 打开辅助功能权限，见[设置](#设置)。 |
 | Space 编号和看到的顺序不一致 | 关闭自动重新排列空间，见[设置](#设置)。 |
-| 新二进制或新脚本第一次运行要半秒左右 | macOS 会对每个新的可执行文件扫描一次，之后就快了。 |
+| 新二进制或脚本启动慢 | 比较首次和后续运行的速度。macOS 的可执行文件检查可能增加启动时间；`--verbose` 只报告 ferry 内部耗时，不包含全部启动器开销。 |
 | macOS 阻止运行 | 用浏览器下载压缩包时会出现。打开「系统设置 > 隐私与安全性」，为 `ferry` 选择「仍要打开」。 |
 
 ## 其他安装方式
@@ -101,13 +105,15 @@ tar -xzf ferry-*.tar.gz ferry
 mkdir -p ~/.local/bin && install -m 0755 ferry ~/.local/bin/ferry
 ```
 
-确认 `~/.local/bin` 在 `PATH` 里。二进制文件没有签名，也没有公证。如果改用浏览器下载压缩包，macOS 可能会阻止第一次运行，见[常见问题](#常见问题)。
+确认 `~/.local/bin` 在 `PATH` 里。构建使用链接器生成的 ad hoc 签名，没有 Apple Developer ID 签名，也没有公证。如果改用浏览器下载压缩包，macOS 可能会阻止第一次运行，见[常见问题](#常见问题)。
 
 ### 从源码编译
 
-需要 Xcode Command Line Tools。
+需要带有 macOS 26 SDK 的 Xcode Command Line Tools。
 
 ```sh
+git clone https://github.com/softmaxe/ferry.git
+cd ferry
 make
 make test
 make install PREFIX="$HOME/.local"

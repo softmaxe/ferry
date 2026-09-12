@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/ferry-logo.png" alt="Ferry logo: a desktop window riding a boat" width="180">
+</p>
+
 <h1 align="center">ferry</h1>
 
 <p align="center">
@@ -6,7 +10,7 @@
 </p>
 
 Move the focused macOS window to another Space and switch to it. This is
-`yabai -m window --space N --focus` as a standalone 40 KB binary.
+`yabai -m window --space N --focus` as a standalone command.
 
 ```sh
 ferry 3
@@ -14,7 +18,7 @@ ferry 3
 
 - Runs once per call and exits. No daemon, no launchd service, no config file.
 - Needs no scripting addition, so System Integrity Protection stays enabled.
-- Takes 30 to 45 ms per call on an Apple silicon Mac.
+- Reports move and total execution time with `--verbose`.
 - Ships Raycast Script Commands for Spaces 1 to 5.
 
 I wrote it because yabai was the only way I knew to do this, and I used one
@@ -23,7 +27,7 @@ code behind that one command and drops the rest.
 
 ## Install
 
-ferry runs on macOS 26 (Tahoe) on Apple silicon only.
+ferry supports macOS 26 Tahoe on Apple silicon only.
 
 ```sh
 brew install softmaxe/tap/ferry
@@ -49,8 +53,8 @@ or [build from source](#build-from-source).
    ```
 
    The terminal window moves to Space 2 and the screen follows it. A terminal
-   always moves itself, because it has focus when you press Return. To move
-   other windows, bind ferry to a hotkey.
+   normally moves itself, because it has focus when you press Return. To move
+   other windows, bind ferry to a hotkey or pass `--window <id>`.
 
 ## Hotkeys with Raycast
 
@@ -73,7 +77,9 @@ For Space 6 and up, copy a script and change both `space=` and the
 
 The scripts look for `ferry` on `PATH`, then in `/opt/homebrew/bin`,
 `/usr/local/bin`, `$HOME/.local/bin`, and this project's `build/`. For a binary
-anywhere else, set its path:
+anywhere else, set `FERRY_BINARY` in the environment that runs the script.
+For Raycast, add the export below to each copied script before its binary lookup.
+An export in a terminal only affects commands launched from that shell:
 
 ```sh
 export FERRY_BINARY="/path/to/ferry"
@@ -92,7 +98,8 @@ Space numbers start at 1 and count every Space on every display, in Mission
 Control order. They match the `index` field of `yabai -m query --spaces`.
 ferry does not create Spaces, so the destination must already exist.
 
-ferry prints nothing on success. Errors go to stderr. The exit status is `0` on
+ferry prints nothing after a successful move unless `--verbose` is set.
+`--help` and `--version` also print to stdout. Errors go to stderr. The exit status is `0` on
 success, `1` when the move fails, and `2` for invalid arguments.
 
 ## Troubleshooting
@@ -106,7 +113,7 @@ success, `1` when the move fails, and `2` for invalid arguments.
 | `unsupported macOS version` | ferry supports macOS 26 only. |
 | ferry moves the wrong window | Turn on Accessibility for the app that runs ferry. See [Set up](#set-up). |
 | Space numbers don't match what you see | Turn off automatic Space rearranging. See [Set up](#set-up). |
-| The first run of a new binary or script takes about half a second | macOS scans each new executable once. Later runs are fast. |
+| A new binary or script starts slowly | Compare later runs with the first. macOS executable checks can add startup time; `--verbose` reports time inside ferry, not all launcher overhead. |
 | macOS blocks the binary | This happens with archives downloaded in a browser. Open System Settings > Privacy & Security and choose Open Anyway for `ferry`. |
 
 ## Other ways to install
@@ -125,15 +132,17 @@ tar -xzf ferry-*.tar.gz ferry
 mkdir -p ~/.local/bin && install -m 0755 ferry ~/.local/bin/ferry
 ```
 
-Make sure `~/.local/bin` is on your `PATH`. The binary is unsigned and not
-notarized. If you download the archive in a browser instead, macOS may block
+Make sure `~/.local/bin` is on your `PATH`. The build uses the linker's ad hoc signature, without an Apple
+Developer ID signature or notarization. If you download the archive in a browser instead, macOS may block
 the first run. See [Troubleshooting](#troubleshooting).
 
 ### Build from source
 
-Building requires the Xcode Command Line Tools.
+Building requires the Xcode Command Line Tools with a macOS 26 SDK.
 
 ```sh
+git clone https://github.com/softmaxe/ferry.git
+cd ferry
 make
 make test
 make install PREFIX="$HOME/.local"
