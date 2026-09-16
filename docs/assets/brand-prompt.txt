@@ -1,0 +1,6 @@
+Method: built-in image_gen
+Asset: docs/assets/ferry-logo.png
+Usage: the same text-free mark serves as the README logo and a square icon.
+
+Prompt:
+Use case: logo-brand. Asset type: square PNG brand mark used as both a GitHub README logo and a small icon for ferry, a macOS command-line utility that moves a focused application window to another desktop Space. Primary request: create one original, elegant text-free mark combining a compact ferry boat silhouette with a single desktop window as its cabin, subtly suggesting movement to the right. Style: crisp geometric flat graphic, confident rounded corners and minimal detail; not a photograph or UI screenshot. Composition: one centered mark with generous transparent padding, legible at 32 px and polished at 180 px, square 1024x1024. Palette: deep ocean navy hull, warm coral cabin/window accent, small pale cream window cutouts; maintain contrast on white and dark GitHub backgrounds. Background: genuinely transparent with alpha. Constraints: no letters, no wordmark, no watermarks, no mockup, no grid of options, no gradients, no shadows, no realistic waves, no Apple or other existing brand symbols. Produce exactly one square standalone brand icon.
