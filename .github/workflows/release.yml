@@ -4,9 +4,10 @@ on:
   push:
     tags:
       - "v*.*.*"
+  workflow_dispatch:
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: false
 
 env:
@@ -16,7 +17,7 @@ env:
 
 jobs:
   validate:
-    name: Validate release tag
+    name: Validate version
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
@@ -30,22 +31,24 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Match tag and Makefile version
+      - name: Read version and validate release tag
         id: version
         shell: bash
         run: |
           set -euo pipefail
-          tag="$GITHUB_REF_NAME"
-          if [[ ! "$tag" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
-            echo "Release tags must match vMAJOR.MINOR.PATCH: $tag" >&2
+          version="$(sed -n 's/^VERSION = \(.*\)$/\1/p' Makefile | head -n 1)"
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Makefile version must match MAJOR.MINOR.PATCH: $version" >&2
             exit 1
           fi
 
-          version="${BASH_REMATCH[1]}"
-          make_version="$(sed -n 's/^VERSION = \(.*\)$/\1/p' Makefile | head -n 1)"
-          if [[ "$make_version" != "$version" ]]; then
-            echo "Makefile version $make_version does not match tag $tag" >&2
-            exit 1
+          tag=""
+          if [[ "$GITHUB_EVENT_NAME" = push && "$GITHUB_REF" = refs/tags/* ]]; then
+            tag="$GITHUB_REF_NAME"
+            if [[ "$tag" != "v$version" ]]; then
+              echo "Makefile version $version does not match tag $tag" >&2
+              exit 1
+            fi
           fi
 
           test -f LICENSE
@@ -144,6 +147,7 @@ jobs:
 
   release:
     name: Publish GitHub Release
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     needs:
       - validate
       - build
@@ -221,6 +225,7 @@ jobs:
 
   formula:
     name: Generate Homebrew formula
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     needs:
       - validate
       - build
@@ -286,6 +291,7 @@ jobs:
 
   formula-test:
     name: Test formula on arm64
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     needs:
       - release
       - formula
@@ -321,6 +327,7 @@ jobs:
 
   tap-sync:
     name: Update Homebrew tap
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     needs:
       - validate
       - release
