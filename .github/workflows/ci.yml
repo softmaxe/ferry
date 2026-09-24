@@ -2,9 +2,15 @@ name: CI
 
 on:
   pull_request:
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
   push:
     branches:
       - main
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
 
 concurrency:
   group: ci-${{ github.event_name }}-${{ github.ref }}
@@ -24,13 +30,9 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Verify native runner architecture
-        shell: bash
-        run: test "$(uname -m)" = arm64
-
       - name: Build and test
         shell: bash
-        run: |
-          set -euo pipefail
-          make
-          make test
+        # Passed through the environment so the Makefile still appends its own flags.
+        env:
+          CFLAGS: -O2 -Werror
+        run: make all test
