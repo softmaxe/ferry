@@ -1,4 +1,4 @@
-import { bob, cuePop, cueProgress, ease, keys, lerp, viewportBetween, type Rect } from "../anim";
+import { FULL, bob, cuePop, cueProgress, ease, keys, lerp, viewportBetween, type Rect } from "../anim";
 import { AppWindow } from "../components/AppWindow";
 import { Boat, DECK, Wake } from "../components/Boat";
 import { Harbor, WATER, cardRect, onCard, pierX } from "../components/Harbor";
@@ -8,18 +8,20 @@ import { Shot } from "../components/Shot";
 import { SpaceView } from "../components/SpaceView";
 import type { Copy } from "../copy";
 import { ARRIVAL, SIZE, type WinRect } from "../layouts";
-import { FRAMES_PER_EIGHTH, cueFrame, eighths } from "../timeline";
+import { FRAMES_PER_EIGHTH, cueFrame, eighths, move } from "../timeline";
 import type { SceneProps } from "./types";
 
 // Raycast runs "Ferry Window to Space 2"; the harbor shows the docs window crossing to Space 2.
+// WIDE frames the piers of both Spaces, so a trip to a farther Space needs a wider shot.
 
 const CLOCK = "08:32";
 const BOAT_SCALE = 0.34;
 // Frames piers 1–3 so the crossing reads large; the other Spaces peek in from the right.
 const WIDE: Rect = { x: -100, y: 200, w: 1250, h: 703.125 };
 
-const DOCS_ON_1 = { ...ARRIVAL[1], ...SIZE.docs };
-const DOCS_ON_2 = { ...ARRIVAL[2], ...SIZE.docs };
+const TRIP = move("p3.enter");
+const DOCS_BEFORE = { ...ARRIVAL[TRIP.from], ...SIZE.docs };
+const DOCS_AFTER = { ...ARRIVAL[TRIP.to], ...SIZE.docs };
 
 /** The world rectangle of a window riding on the deck of a boat at (x, y). */
 export const onDeck = (x: number, y: number, scale: number, size: { w: number; h: number }) => {
@@ -64,13 +66,13 @@ export const P3 = ({ frame: f, text }: SceneProps) => {
   const inHarbor = f >= cueFrame("p3.pullOut");
 
   const screenBefore = (
-    <SpaceScreen space={1} frame={f} text={text} extra={{ kind: "docs", rect: DOCS_ON_1 }} />
+    <SpaceScreen space={TRIP.from} frame={f} text={text} extra={{ kind: "docs", rect: DOCS_BEFORE }} />
   );
 
   if (!inHarbor) {
     return (
       <Shot
-        view={{ x: 0, y: 0, w: 1920, h: 1080 }}
+        view={FULL}
         overlay={
           <>
             <Caption text={text.p3Caption} show={cueProgress(f, "p3.type", 2, ease.out)} />
@@ -95,8 +97,8 @@ export const P3 = ({ frame: f, text }: SceneProps) => {
   const depart = dock + eighths(1.2);
   const boatX =
     f < depart
-      ? keys(f, [[sailStart, pierX(1)], [dock, pierX(2)]], ease.inOut)
-      : pierX(2) + keys(f, [[depart, 0], [depart + eighths(3), 700]], ease.in);
+      ? keys(f, [[sailStart, pierX(TRIP.from)], [dock, pierX(TRIP.to)]], ease.inOut)
+      : pierX(TRIP.to) + keys(f, [[depart, 0], [depart + eighths(3), 700]], ease.in);
   const velocity =
     f > sailStart && f < dock
       ? Math.sin(((f - sailStart) / (dock - sailStart)) * Math.PI)
@@ -105,8 +107,8 @@ export const P3 = ({ frame: f, text }: SceneProps) => {
   const boatY = WATER + 18 + b.y;
   const deck = onDeck(boatX, boatY, BOAT_SCALE, SIZE.docs);
 
-  const from = onCard(1, DOCS_ON_1);
-  const to = onCard(2, DOCS_ON_2);
+  const from = onCard(TRIP.from, DOCS_BEFORE);
+  const to = onCard(TRIP.to, DOCS_AFTER);
   const board = keys(f, [[boardStart, 0], [sailStart, 1]], ease.inOut);
   const unload = keys(f, [[dock, 0], [dock + eighths(1), 1]], ease.inOut);
 
@@ -124,15 +126,15 @@ export const P3 = ({ frame: f, text }: SceneProps) => {
   }
 
   const screen = (space: number) =>
-    space === 1 ? (
-      <SpaceScreen space={1} frame={f} text={text} extra={f < boardStart ? { kind: "docs", rect: DOCS_ON_1 } : null} />
-    ) : space === 2 ? (
-      <SpaceScreen space={2} frame={f} text={text} extra={unload >= 1 ? { kind: "docs", rect: DOCS_ON_2 } : null} />
+    space === TRIP.from ? (
+      <SpaceScreen space={space} frame={f} text={text} extra={f < boardStart ? { kind: "docs", rect: DOCS_BEFORE } : null} />
+    ) : space === TRIP.to ? (
+      <SpaceScreen space={space} frame={f} text={text} extra={unload >= 1 ? { kind: "docs", rect: DOCS_AFTER } : null} />
     ) : (
       <SpaceScreen space={space} frame={f} text={text} />
     );
 
-  const view = f < cueFrame("p3.pushIn") ? viewportBetween(cardRect(1), WIDE, pullOut) : viewportBetween(WIDE, cardRect(2), pushIn);
+  const view = f < cueFrame("p3.pushIn") ? viewportBetween(cardRect(TRIP.from), WIDE, pullOut) : viewportBetween(WIDE, cardRect(TRIP.to), pushIn);
 
   return (
     <Shot view={view} overlay={<Caption text={text.p3Caption} show={1 - cueProgress(f, "p3.pullOut", 1, ease.out)} />}>

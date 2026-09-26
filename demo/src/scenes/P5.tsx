@@ -8,7 +8,7 @@ import { Shot } from "../components/Shot";
 import { SpaceView, type Guest } from "../components/SpaceView";
 import type { Copy } from "../copy";
 import { ARRIVAL, SIZE } from "../layouts";
-import { FRAMES_PER_EIGHTH, cueFrame, eighths } from "../timeline";
+import { FRAMES_PER_EIGHTH, cueFrame, eighths, move } from "../timeline";
 import { DESIGN_ON_2 } from "./P4";
 import type { SceneProps } from "./types";
 
@@ -17,14 +17,19 @@ import type { SceneProps } from "./types";
 const CLOCK = "14:05";
 const HOP_LENGTH = eighths(5);
 
+const hop = (cue: string, window: Guest, size: { w: number; h: number }): HopPlan => {
+  const { from, to } = move(cue);
+  return { at: cueFrame(cue), from, to, follow: true, window, landing: { ...ARRIVAL[to], ...size } };
+};
+
 const plans = (text: Copy) => {
   const design: Guest = { kind: "design", title: text.windows.design, rect: DESIGN_ON_2 };
   const dm: Guest = { kind: "chat", title: text.windows.dm, rect: { x: 300, y: 330, ...SIZE.chat } };
   const music: Guest = { kind: "music", title: text.windows.music, rect: { x: 260, y: 420, ...SIZE.music } };
   const hops: (HopPlan & { popAt?: number })[] = [
-    { at: cueFrame("p5.move1"), from: 2, to: 3, follow: true, window: design, landing: { ...ARRIVAL[3], ...SIZE.design } },
-    { at: cueFrame("p5.move2"), from: 3, to: 1, follow: true, window: dm, landing: { ...ARRIVAL[1], ...SIZE.chat }, popAt: cueFrame("p5.move1") + eighths(5) },
-    { at: cueFrame("p5.move3"), from: 1, to: 5, follow: true, window: music, landing: { ...ARRIVAL[5], ...SIZE.music }, popAt: cueFrame("p5.move2") + eighths(5) },
+    hop("p5.move1", design, SIZE.design),
+    { ...hop("p5.move2", dm, SIZE.chat), popAt: cueFrame("p5.move1") + eighths(5) },
+    { ...hop("p5.move3", music, SIZE.music), popAt: cueFrame("p5.move2") + eighths(5) },
   ];
   return hops;
 };

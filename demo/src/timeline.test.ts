@@ -6,6 +6,7 @@ import {
   TOTAL_FRAMES,
   cueFrame,
   cueSeconds,
+  move,
   positionFrame,
   sceneAt,
   scenes,
@@ -73,5 +74,20 @@ describe("cues", () => {
   it("resolve by name and reject unknown names", () => {
     expect(cueFrame("p3.enter")).toBe(positionFrame(10, 4));
     expect(() => cueFrame("p9.nope")).toThrow(/unknown cue/);
+  });
+});
+
+describe("moves", () => {
+  it("start on a cue and go between two different Spaces", () => {
+    for (const [name, [from, to]] of Object.entries(timeline.moves)) {
+      expect(timeline.cues[name], name).toBeDefined();
+      for (const space of [from, to]) expect(space, name).toBeOneOf([1, 2, 3, 4, 5]);
+      expect(from, name).not.toBe(to);
+    }
+  });
+
+  it("resolve by cue and reject cues that move nothing", () => {
+    expect(move("p5.move2")).toEqual({ from: 3, to: 1 });
+    expect(() => move("p3.type")).toThrow(/no move/);
   });
 });

@@ -15,6 +15,7 @@ from pathlib import Path
 
 TIMELINE = json.loads((Path(__file__).parent.parent / "src" / "timeline.json").read_text())
 EIGHTH_SECONDS = 60 / TIMELINE["dottedQuarterBpm"] / 3
+EIGHTHS_PER_BAR = TIMELINE["eighthsPerBar"]
 
 
 @dataclass(frozen=True)
@@ -56,7 +57,7 @@ def p(name: str) -> int:
 
 
 def at(bar: int, eighth: float = 0) -> float:
-    return (bar - 1) * TIMELINE["eighthsPerBar"] + eighth
+    return (bar - 1) * EIGHTHS_PER_BAR + eighth
 
 
 def cue_eighths(name: str) -> float:
@@ -65,7 +66,15 @@ def cue_eighths(name: str) -> float:
 
 
 def total_eighths() -> float:
-    return TIMELINE["bars"] * TIMELINE["eighthsPerBar"] + TIMELINE["tailSeconds"] / EIGHTH_SECONDS
+    return TIMELINE["bars"] * EIGHTHS_PER_BAR + TIMELINE["tailSeconds"] / EIGHTH_SECONDS
+
+
+# Where each ferry trip in TIMELINE["moves"] lands, when that isn't four eighths after it starts.
+ARRIVAL_CUES = {"p3.enter": "p3.dock", "p6.enter": "p6.inset"}
+
+
+def arrival_eighths(move: str) -> float:
+    return cue_eighths(ARRIVAL_CUES[move]) if move in ARRIVAL_CUES else cue_eighths(move) + 4
 
 
 def space_pitch(space: int) -> int:
@@ -104,7 +113,7 @@ HARMONY: dict[int, list[str]] = {
 def chord_segments():
     """(start, length, symbol) for every chord in the piece."""
     for bar, symbols in HARMONY.items():
-        span = 6 / len(symbols)
+        span = EIGHTHS_PER_BAR / len(symbols)
         for i, symbol in enumerate(symbols):
             yield at(bar, i * span), span, symbol
 
@@ -186,7 +195,7 @@ def compose() -> list[Note]:
 
     # --- Piano left hand: the rocking barcarolle figure -------------------------------
     for start, span, symbol in chord_segments():
-        bar = int(start // 6) + 1
+        bar = int(start // EIGHTHS_PER_BAR) + 1
         v = dynamics(bar)
         bass_pc = CHORDS[symbol][0]
         bass = pitch_in(bass_pc, 38, 49)
@@ -201,7 +210,7 @@ def compose() -> list[Note]:
                 s.add("piano", start, 6, m, v - 8, humanize=True)
             continue
         tones = tones_above(symbol, max(bass + 5, 50), 3)
-        figure = [tones[0], tones[1], tones[2], tones[1], tones[0]] if span == 6 else [tones[0], tones[1]]
+        figure = [tones[0], tones[1], tones[2], tones[1], tones[0]] if span == EIGHTHS_PER_BAR else [tones[0], tones[1]]
         s.add("piano", start, span, bass, v - 2, humanize=True)
         for i, m in enumerate(figure):
             s.add("piano", start + 1 + i, span - 1 - i, m, v - 14 + (3 if i == 2 else 0), humanize=True)
@@ -266,8 +275,9 @@ def compose() -> list[Note]:
     s.gliss(at(12, 4.8), at(13, 0.4), "A5", "A3", "A7", 52, down=True)
     s.gliss(cue_eighths("p4.close"), cue_eighths("p4.close") + 1.5, "E6", "A4", "A", 50, down=True)
     # The glissando runs the way the Spaces slide: up for a higher Space, down for a lower one.
-    for move, symbol, down in [("p5.move1", "D", False), ("p5.move2", "A/C#", True), ("p5.move3", "Bm", False)]:
-        s.gliss(cue_eighths(move), cue_eighths(move) + 3, "D4", "D6", symbol, 60, down=down)
+    for move, symbol in [("p5.move1", "D"), ("p5.move2", "A/C#"), ("p5.move3", "Bm")]:
+        source, destination = TIMELINE["moves"][move]
+        s.gliss(cue_eighths(move), cue_eighths(move) + 3, "D4", "D6", symbol, 60, down=destination < source)
     s.gliss(at(20, 4.8), at(21, 0.4), "B5", "B3", "A", 52, down=True)
     s.gliss(cue_eighths("p6.sail"), cue_eighths("p6.sail") + 2.5, "G4", "G6", "G", 56)
     s.roll("harp", cue_eighths("p7.endCard"), ["G3", "D4", "G4", "B4", "D5", "G5"], 60, spread=0.15)
@@ -277,12 +287,12 @@ def compose() -> list[Note]:
     for cue, pitch in [("p2.tagline1", "D6"), ("p2.tagline2", "F#6"), ("p2.tagline3", "A6")]:
         s.add("glock", cue_eighths(cue), 3, pitch, 60)
     s.add("glock", cue_eighths("p3.enter"), 3, "A6", 56)
-    s.add("glock", cue_eighths("p3.dock"), 4, space_pitch(2), 66)
     for i in range(1, 6):
         s.add("glock", cue_eighths(f"p4.record{i}"), 3, space_pitch(i), 62)
-    for move, space in [("p5.move1", 3), ("p5.move2", 1), ("p5.move3", 5)]:
-        s.add("glock", cue_eighths(move) + 4, 3, space_pitch(space), 66)
-    s.add("glock", cue_eighths("p6.inset"), 4, space_pitch(4), 58)
+    # Each arrival rings its destination Space; the trip without follow rings softer.
+    for move, (_, destination) in TIMELINE["moves"].items():
+        quiet = move == "p6.enter"
+        s.add("glock", arrival_eighths(move), 3 if move.startswith("p5.") else 4, space_pitch(destination), 58 if quiet else 66)
     for cue, pitch in [("p6.badge1", "G6"), ("p6.badge2", "A6"), ("p6.badge3", "B6")]:
         s.add("glock", cue_eighths(cue), 3, pitch, 64)
     s.add("glock", cue_eighths("p7.install"), 4, "A6", 56)
@@ -293,7 +303,7 @@ def compose() -> list[Note]:
         for start, span, symbol in [seg for seg in chord_segments() if at(bar) <= seg[0] < at(bar + 1)]:
             root = pitch_in(CHORDS[symbol][0], 33, 44)
             s.add("cb_pizz", start, 1.5, root, dynamics(bar) + 2, humanize=True)
-            if span == 6:
+            if span == EIGHTHS_PER_BAR:
                 s.add("cb_pizz", start + 3, 1.5, root, dynamics(bar) - 6, humanize=True)
     for bar in range(13, 17):
         symbol = HARMONY[bar][0]
@@ -307,7 +317,7 @@ def compose() -> list[Note]:
 
     # --- Sustained strings --------------------------------------------------------------
     for start, span, symbol in chord_segments():
-        bar = int(start // 6) + 1
+        bar = int(start // EIGHTHS_PER_BAR) + 1
         if bar < 5 or bar == 28:
             continue
         soft = 30 if bar <= 12 else 38 if bar <= 16 else 46

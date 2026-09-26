@@ -7,14 +7,15 @@ import { SpaceView, type Guest } from "../components/SpaceView";
 import { Desktop } from "../components/Desktop";
 import { ARRIVAL, SIZE } from "../layouts";
 import { C, FONT } from "../theme";
-import { FRAMES_PER_EIGHTH, cueFrame, eighths } from "../timeline";
+import { FRAMES_PER_EIGHTH, cueFrame, eighths, move } from "../timeline";
 import type { SceneProps } from "./types";
 
 // Early evening, on a call: the terminal is sent to Space 4 with --no-follow while the screen
 // stays on the call. Then ferry's own report of that move, and what it doesn't need.
 
 const CLOCK = "17:30";
-const COMMAND = "ferry --no-follow --verbose 4";
+const TRIP = move("p6.enter");
+const COMMAND = `ferry --no-follow --verbose ${TRIP.to}`;
 // Real output from `ferry --verbose` on macOS 26 (window id and timings as measured; Space 4's
 // internal id follows the measured ids 4 and 5 for Spaces 1 and 2).
 const OUTPUT = ["window 12877 (via accessibility) -> space 4 (id 7):", "moved in 3.4 ms, not followed, total 106.9 ms"];
@@ -50,11 +51,10 @@ export const P6 = ({ frame: f, text }: SceneProps) => {
   const terminal: Guest = { kind: "terminal", title: text.windows.terminal, rect: TERMINAL, lines: terminalLines(typed, false, !entered) };
   const plan: HopPlan = {
     at: cueFrame("p6.enter"),
-    from: 1,
-    to: 4,
+    ...TRIP,
     follow: false,
     window: terminal,
-    landing: { ...ARRIVAL[4], ...SIZE.terminal },
+    landing: { ...ARRIVAL[TRIP.to], ...SIZE.terminal },
   };
   // Without follow the hop ends once the boat has left and the sea has settled.
   const hopping = f >= plan.at && f < plan.at + eighths(4);
@@ -62,15 +62,15 @@ export const P6 = ({ frame: f, text }: SceneProps) => {
   const ping = cueProgress(f, "p6.inset", 3, ease.out);
   const inset = cuePop(f, "p6.inset", 0, 14);
   const insetScreen = (
-    <Desktop space={4} frame={f} app={text.windows.terminal} clock={CLOCK}>
+    <Desktop space={plan.to} frame={f} app={text.windows.terminal} clock={CLOCK}>
       <AppWindow kind="terminal" {...plan.landing} title={text.windows.terminal} lines={terminalLines(COMMAND, true, false)} frame={f} />
     </Desktop>
   );
 
   const screen = hopping ? (
-    <Hop frame={f} plan={plan} text={text} clock={CLOCK} guestsOf={(s) => (s === 1 ? [call] : [])} />
+    <Hop frame={f} plan={plan} text={text} clock={CLOCK} guestsOf={(s) => (s === plan.from ? [call] : [])} />
   ) : (
-    <SpaceView space={1} frame={f} text={text} clock={CLOCK} guests={entered ? [call] : [call, terminal]} ping={ping} pingSpace={4} />
+    <SpaceView space={plan.from} frame={f} text={text} clock={CLOCK} guests={entered ? [call] : [call, terminal]} ping={ping} pingSpace={plan.to} />
   );
 
   const reveal = cueProgress(f, "p6.reveal", 2, ease.out);
@@ -92,7 +92,7 @@ export const P6 = ({ frame: f, text }: SceneProps) => {
               </svg>
               <rect x={10} y={180} width={100} height={30} rx={10} fill={C.navyInk} opacity={0.85} />
               <text x={60} y={202} textAnchor="middle" fontFamily={FONT.ui} fontWeight={700} fontSize={18} fill={C.cream}>
-                Space 4
+                Space {plan.to}
               </text>
             </g>
           )}

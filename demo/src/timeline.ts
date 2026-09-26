@@ -19,6 +19,8 @@ export const timeline = data as unknown as {
   tailSeconds: number;
   scenes: Scene[];
   cues: Record<string, [bar: number, eighth: number]>;
+  /** The ferry trips: the cue each one starts on, and the Spaces it goes from and to. */
+  moves: Record<string, [from: number, to: number]>;
 };
 
 export const FPS = timeline.fps;
@@ -47,6 +49,14 @@ const cue = (name: string) => {
 
 export const cueSeconds = (name: string) => positionSeconds(...cue(name));
 export const cueFrame = (name: string) => positionFrame(...cue(name));
+
+/** The Spaces the ferry trip starting on cue `name` goes between. */
+export const move = (name: string) => {
+  const spaces = timeline.moves[name];
+  if (!spaces) throw new Error(`no move starts on cue: ${name}`);
+  const [from, to] = spaces;
+  return { from, to };
+};
 
 export const sceneStartFrame = (scene: Scene) => positionFrame(scene.startBar);
 export const sceneEndFrame = (scene: Scene) =>
