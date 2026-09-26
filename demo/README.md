@@ -50,8 +50,10 @@ scripts/sheet.sh out/sheet.png out/stills/ferry-en-p3.sail+40.png out/stills/fer
 
 ```sh
 npm run typecheck
-npm test                             # tempo map, copy parity, glossary, font subsets
+npm test                             # timeline consistency, copy content, font subsets
 uv run --project music pytest music  # score fits the film and hits its cues
 ```
 
-CI ignores `demo/`, so run these locally when changing the film or the score.
+CI ignores `demo/`. Run only the checks relevant to the change: typecheck for TypeScript,
+`npm test` for timeline, copy, or font logic, and pytest for the score, mix, or shared timeline.
+Review wording and musical choices in the preview.
