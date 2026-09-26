@@ -39,10 +39,11 @@ npm run readme       # out/ferry-*-readme.mp4, re-encoded under GitHub's 10 MB a
 npm run studio       # scrub the film in the browser
 ```
 
-Check a frame without rendering the film:
+Check frames without rendering the film, and tile them into a contact sheet:
 
 ```sh
 node scripts/stills.mjs ferry-en p3.sail+40 p6.reveal
+scripts/sheet.sh out/sheet.png out/stills/ferry-en-p3.sail+40.png out/stills/ferry-en-p6.reveal.png
 ```
 
 ## Tests
@@ -52,3 +53,5 @@ npm run typecheck
 npm test                             # tempo map, copy parity, glossary, font subsets
 uv run --project music pytest music  # score fits the film and hits its cues
 ```
+
+CI ignores `demo/`, so run these locally when changing the film or the score.
