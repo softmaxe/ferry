@@ -207,6 +207,30 @@ static uint32_t ax_focused_window(pid_t pid, AXUIElementRef *window_ref)
     return wid;
 }
 
+// Match the requested window, not the app's focused window (yabai:
+// application_window_list and ax_window_id).
+static AXUIElementRef ax_window_for_id(pid_t pid, uint32_t wid)
+{
+    AXUIElementRef app = AXUIElementCreateApplication(pid);
+    CFArrayRef windows = NULL;
+    AXUIElementRef result = NULL;
+
+    if (AXUIElementCopyAttributeValue(app, kAXWindowsAttribute, (CFTypeRef *) &windows) == kAXErrorSuccess && windows) {
+        for (CFIndex i = 0; i < CFArrayGetCount(windows); ++i) {
+            AXUIElementRef window = CFArrayGetValueAtIndex(windows, i);
+            uint32_t candidate = 0;
+            if (_AXUIElementGetWindow(window, &candidate) == kAXErrorSuccess && candidate == wid) {
+                result = (AXUIElementRef) CFRetain(window);
+                break;
+            }
+        }
+    }
+
+    if (windows) CFRelease(windows);
+    CFRelease(app);
+    return result;
+}
+
 // Fallback when Accessibility is unavailable: the frontmost normal-level
 // on-screen window owned by the app.
 static uint32_t window_list_front_window(pid_t pid)
@@ -372,6 +396,15 @@ int main(int argc, char **argv)
             fail(1, "window %u not found", wid);
         }
 
+        // AX may omit windows on inactive Spaces. Resolve the reference before
+        // moving so explicit window IDs can use yabai's full focus/raise path.
+        if (follow && !window_ref) {
+            pid_t pid = 0;
+            if (GetProcessPID(&psn, &pid) == noErr && pid > 0) {
+                window_ref = ax_window_for_id(pid, wid);
+            }
+        }
+
         bool moved = false;
         double move_ms = 0;
 
@@ -400,7 +433,7 @@ int main(int argc, char **argv)
             printf("window %u (via %s) -> space %d (id %llu): %s in %.1f ms, %s, total %.1f ms\n",
                    wid, source, index, (unsigned long long) dst_sid,
                    moved ? "moved" : "already there", move_ms,
-                   follow ? "focused" : "not followed", elapsed_ms(start));
+                   follow ? "focus requested" : "not followed", elapsed_ms(start));
         }
     }
 

@@ -12,7 +12,7 @@ FRAMEWORKS  = -framework AppKit -framework ApplicationServices \
 PREFIX ?= /usr/local
 BIN     = build/ferry
 
-.PHONY: all test install clean
+.PHONY: all test test-follow install clean
 
 all: $(BIN)
 
@@ -22,6 +22,14 @@ $(BIN): src/ferry.m Makefile
 
 test: $(BIN)
 	tests/cli.sh $(BIN) $(VERSION)
+
+# Requires a live desktop and Accessibility; temporarily switches Spaces.
+test-follow: $(BIN) build/follow-test
+	build/follow-test $(abspath $(BIN))
+
+build/follow-test: tests/follow.m Makefile
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) $< -o $@ $(FRAMEWORKS)
 
 install: $(BIN)
 	install -d $(DESTDIR)$(PREFIX)/bin
