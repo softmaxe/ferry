@@ -1,0 +1,31 @@
+{
+  "name": "ferry-demo",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "music": "uv run --project music python music/render.py",
+    "stills": "node scripts/stills.mjs",
+    "render:en": "remotion render src/index.ts ferry-en out/ferry-en.mp4",
+    "render:zh": "remotion render src/index.ts ferry-zh out/ferry-zh.mp4",
+    "readme": "scripts/readme-cut.sh out/ferry-en.mp4 out/ferry-en-readme.mp4 && scripts/readme-cut.sh out/ferry-zh.mp4 out/ferry-zh-readme.mp4"
+  },
+  "dependencies": {
+    "@remotion/bundler": "4.0.529",
+    "@remotion/cli": "4.0.529",
+    "@remotion/google-fonts": "4.0.529",
+    "@remotion/media": "4.0.529",
+    "@remotion/renderer": "4.0.529",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "remotion": "4.0.529"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "typescript": "6.0.3",
+    "vitest": "5.0.2"
+  }
+}
