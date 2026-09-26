@@ -9,6 +9,8 @@
   <a href="README.zh-CN.md"><kbd>简体中文</kbd></a>
 </p>
 
+https://github.com/user-attachments/assets/b46ac753-cedb-400c-b556-9e2322936171
+
 把 macOS 当前焦点窗口移到另一个 Space，并切换过去。相当于把
 `yabai -m window --space N --focus` 单独做成一条命令。
 

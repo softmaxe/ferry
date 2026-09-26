@@ -9,6 +9,8 @@
   <a href="README.zh-CN.md"><kbd>简体中文</kbd></a>
 </p>
 
+https://github.com/user-attachments/assets/483781fc-7003-433a-9ea7-7cbea45ff641
+
 Move the focused macOS window to another Space and switch to it. This is
 `yabai -m window --space N --focus` as a standalone command.
 
