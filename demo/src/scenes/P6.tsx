@@ -16,9 +16,8 @@ import type { SceneProps } from "./types";
 const CLOCK = "17:30";
 const TRIP = move("p6.enter");
 const COMMAND = `ferry --no-follow --verbose ${TRIP.to}`;
-// Real output from `ferry --verbose` on macOS 26 (window id and timings as measured; Space 4's
-// internal id follows the measured ids 4 and 5 for Spaces 1 and 2).
-const OUTPUT = ["window 12877 (via accessibility) -> space 4 (id 7):", "moved in 3.4 ms, not followed, total 106.9 ms"];
+// Real output from `ferry --verbose` on macOS 26: window id, timings and Space 4's id as measured.
+const OUTPUT = ["window 12877 (via accessibility) -> space 4 (id 1):", "moved in 3.4 ms, not followed, total 106.9 ms"];
 const HIGHLIGHT = "moved in 3.4 ms";
 
 const CALL = { x: 90, y: 90, ...SIZE.call };
@@ -26,8 +25,8 @@ const TERMINAL = { x: 830, y: 430, ...SIZE.terminal };
 
 const terminalLines = (typed: string, output: boolean, caret: boolean) => (
   <g>
-    <text x={30} y={100} fill="#7F93B0">$ make</text>
-    <text x={30} y={138} fill="#7F93B0">Build complete: build/ferry</text>
+    <text x={30} y={100} fill="#7F93B0">$ git pull</text>
+    <text x={30} y={138} fill="#7F93B0">Already up to date.</text>
     <text x={30} y={190}>
       <tspan fill={C.coral}>$ </tspan>
       <tspan>{typed}</tspan>
