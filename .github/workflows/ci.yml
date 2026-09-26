@@ -5,12 +5,14 @@ on:
     paths-ignore:
       - "**.md"
       - "docs/**"
+      - "demo/**"
   push:
     branches:
       - main
     paths-ignore:
       - "**.md"
       - "docs/**"
+      - "demo/**"
 
 concurrency:
   group: ci-${{ github.event_name }}-${{ github.ref }}
