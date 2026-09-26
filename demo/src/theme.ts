@@ -35,12 +35,12 @@ export const C = {
 };
 
 // One wallpaper color per Space; the harbor docks reuse them so a Space is recognizable anywhere.
-export const SPACE_COLORS: Record<number, { wall: string; deep: string; name: string }> = {
-  1: { wall: "#F6C9AA", deep: "#E9A987", name: "chat" },
-  2: { wall: "#BFE3D0", deep: "#93CBAE", name: "code" },
-  3: { wall: "#D8CDF1", deep: "#B7A7E3", name: "design" },
-  4: { wall: "#F5E0A0", deep: "#E6C56E", name: "terminal" },
-  5: { wall: "#F4BCC6", deep: "#E596A5", name: "music" },
+export const SPACE_COLORS: Record<number, { wall: string; deep: string }> = {
+  1: { wall: "#F6C9AA", deep: "#E9A987" },
+  2: { wall: "#BFE3D0", deep: "#93CBAE" },
+  3: { wall: "#D8CDF1", deep: "#B7A7E3" },
+  4: { wall: "#F5E0A0", deep: "#E6C56E" },
+  5: { wall: "#F4BCC6", deep: "#E596A5" },
 };
 
 const zhText = allStrings(copy.zh).join("");
