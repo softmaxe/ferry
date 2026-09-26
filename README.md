@@ -114,7 +114,13 @@ exclude launcher startup and do not measure the full Space switch animation.
 `--verbose`, `--help`, and `--version` print to stdout. Errors go to stderr.
 The exit status is `0` on success, `1` for runtime errors, and `2` for invalid
 arguments. ferry verifies that the window is on the destination Space, but does
-not verify that the focus change succeeded.
+not verify that the focus change succeeded. Verbose output says `focus requested`
+to distinguish the request from a confirmed Space switch.
+
+Follow from a background app needs an Accessibility reference to the selected
+window. ferry resolves explicit window IDs before moving them. Without
+Accessibility, or when a window starts on an inactive Space and macOS omits it
+from the app's Accessibility window list, the window may move without Follow.
 
 ## Troubleshooting
 
@@ -167,6 +173,10 @@ make install PREFIX="$HOME/.local"
 ```
 
 `make test` checks the command-line interface only. It does not move windows.
+`make test-follow` runs the live desktop regression for background `--window`
+commands. It requires Accessibility and two normal Spaces on the active display,
+creates temporary test windows, and temporarily switches Spaces. It closes the
+test windows and restores the original app afterward.
 
 ### Upgrade and uninstall
 
