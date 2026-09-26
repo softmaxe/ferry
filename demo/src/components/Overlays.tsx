@@ -63,20 +63,25 @@ export const Caption = ({ text, show, y = 118, size = 40, mono = false }: { text
 
 export const ClockChip = ({ time, show }: { time: string; show: number }) => {
   if (show <= 0.001) return null;
-  const hour = parseInt(time, 10);
-  const day = hour >= 6 && hour < 18;
+  const evening = parseInt(time, 10) >= 18;
   return (
     <g opacity={show}>
       <rect x={48} y={44} width={196} height={64} rx={32} fill={C.navyInk} opacity={0.9} />
-      {day ? (
+      {evening ? (
+        <g fill="#FFB36B" stroke="#FFB36B" strokeWidth={4} strokeLinecap="round">
+          <path d="M 76 84 A 14 14 0 0 1 104 84 Z" stroke="none" />
+          {[-60, -30, 0, 30, 60].map((a) => (
+            <line key={a} x1={90} y1={62} x2={90} y2={58} transform={`rotate(${a} 90 84)`} />
+          ))}
+          <line x1={70} y1={90} x2={110} y2={90} />
+        </g>
+      ) : (
         <g>
           <circle cx={90} cy={76} r={13} fill="#FFD27A" />
           {Array.from({ length: 8 }).map((_, i) => (
             <line key={i} x1={90} y1={56} x2={90} y2={52} stroke="#FFD27A" strokeWidth={4} strokeLinecap="round" transform={`rotate(${i * 45} 90 76)`} />
           ))}
         </g>
-      ) : (
-        <path d="M 96 58 A 18 18 0 1 0 104 88 A 14 14 0 1 1 96 58 Z" fill="#FFD27A" />
       )}
       <text x={126} y={88} fontFamily={FONT.mono} fontWeight={700} fontSize={32} fill={C.cream}>
         {time}
