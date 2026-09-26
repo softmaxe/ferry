@@ -100,7 +100,7 @@ export const Hop = ({ frame: f, plan, text, clock, guestsOf }: Props) => {
   const staysOn = (space: number) =>
     (space === plan.from && f < lift[0]) || (plan.follow && space === plan.to && unloadT >= 1);
 
-  const focusedTitle = win ? plan.window.title : guestsOf(shown).at(-1)?.title ?? residents(shown, text).at(-1)?.title ?? "Finder";
+  const focusedTitle = win || staysOn(shown) ? plan.window.title : guestsOf(shown).at(-1)?.title ?? residents(shown, text).at(-1)?.title ?? "Finder";
 
   return (
     <g>

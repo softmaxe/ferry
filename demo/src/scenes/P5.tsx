@@ -57,7 +57,7 @@ export const P5 = ({ frame: f, text }: SceneProps) => {
   const inRoom = f >= cueFrame("p5.zoomOut");
 
   const screen = active ? (
-    <Hop frame={f} plan={active} text={text} clock={CLOCK} guestsOf={(s) => guestsAt(s, f, text, hops)} />
+    <Hop frame={f} plan={active} text={text} clock={CLOCK} guestsOf={(s) => guestsAt(s, f, text, hops.filter((h) => h !== active))} />
   ) : (
     <SpaceView space={settledSpace} frame={f} text={text} clock={CLOCK} guests={guestsAt(settledSpace, f, text, hops)} />
   );
