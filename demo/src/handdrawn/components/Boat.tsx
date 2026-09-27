@@ -75,6 +75,9 @@ export const Boat = ({
           />
         )}
         <g opacity={color}>
+          {/* Opaque paper keeps the horizon and sun behind the penciled hull. */}
+          {cabin && <path d={CABIN} fill={C.paper} />}
+          <path d={HULL} fill={C.paper} />
           <g filter={`url(#${crayonId})`}>
             {cabin && <path d={CABIN} fill={C.coral} opacity={0.45} />}
             <path d={HULL} fill={C.navy} opacity={0.45} />
