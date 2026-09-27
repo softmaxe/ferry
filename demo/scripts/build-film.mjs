@@ -26,7 +26,7 @@ for (const id of compositionIds) {
   let reported = -1;
   await renderMedia({
     serveUrl, composition, codec: "h264", audioCodec: "aac", audioBitrate: "320k",
-    pixelFormat: "yuv420p", crf: 18, imageFormat: "png", concurrency: 4,
+    pixelFormat: "yuv420p", crf: 18, imageFormat: "jpeg", jpegQuality: 95, concurrency: 4,
     outputLocation: path.join(demoDir, `out/${id}.mp4`),
     onProgress: ({ progress }) => {
       const percent = Math.floor(progress * 10) * 10;
