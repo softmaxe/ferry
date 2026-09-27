@@ -14,6 +14,8 @@ const en = {
   tagline: ["Any window.", "Any Space.", "One keystroke."],
   badges: ["No daemon", "SIP stays on", "Runs once, then exits"],
   endLine: "macOS 26 · Apple silicon",
+  installCommand: "brew install softmaxe/tap/ferry",
+  repoLink: "github.com/softmaxe/ferry",
   pier: "Pier",
   windows: { chat: "Team chat", docs: "API docs", code: "editor", design: "Design review", call: "Weekly sync", terminal: "Terminal" },
 };
@@ -32,6 +34,8 @@ const zh: Copy = {
   tagline: ["一个按键，", "把窗口送到", "任意 Space。"],
   badges: ["没有常驻进程", "SIP 保持开启", "运行一次就退出"],
   endLine: "macOS 26 · Apple silicon",
+  installCommand: "brew install softmaxe/tap/ferry",
+  repoLink: "github.com/softmaxe/ferry",
   pier: "码头",
   windows: { chat: "团队聊天", docs: "API 文档", code: "编辑器", design: "设计评审", call: "每周例会", terminal: "终端" },
 };
