@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { lerp, ramp } from "../anim";
+import { lerp, ramp, smooth } from "../anim";
 import type { Lang } from "../copy";
 import { FPS } from "../timeline";
 import { Boat, DECK, Wake } from "./Boat";
@@ -9,8 +9,7 @@ import { WindowFrame, type WindowKind } from "./WindowFrame";
 
 export const CROSSING_WINDOW = { w: 720, h: 440 };
 export type CrossingTiming = { board: number; sail: number; dock: number; unload: number };
-const ease = (value: number) => value * value * (3 - 2 * value);
-const progressAt = (frame: number, start: number, end: number) => ease(ramp(frame, start, Math.max(start + 1, end)));
+const progressAt = (frame: number, start: number, end: number) => smooth(ramp(frame, start, Math.max(start + 1, end)));
 
 /** The camera and the menu use the same Space coordinate during Follow. */
 export const crossingState = (frame: number, from: number, to: number, follow: boolean, timing: CrossingTiming) => {

@@ -1,4 +1,4 @@
-import { lerp, ramp } from "../anim";
+import { lerp, ramp, smooth } from "../anim";
 import { Crossing, crossingState, type CrossingTiming } from "../components/Crossing";
 import { Harbor, pierX, projectHarborPoint } from "../components/Harbor";
 import { MenuBar } from "../components/Mac";
@@ -12,7 +12,6 @@ import type { BeatProps } from "./types";
 
 const SPACES = [1, 2, 3, 4, 5];
 const RESIDENTS: WindowKind[] = ["chat", "code", "design", "terminal", "call"];
-const smooth = (value: number) => value * value * (3 - 2 * value);
 const PLANS = [1, 2, 3].map((index) => {
   const board = cueFrame(`b4.move${index}`);
   const unload = cueFrame(`b4.arrival${index}`);

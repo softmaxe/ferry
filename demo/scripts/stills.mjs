@@ -2,13 +2,11 @@
 // Usage: npm run stills -- ferry-en B1 B6 b3.dock+30 1234
 import { bundle } from "@remotion/bundler";
 import { renderStill, selectComposition } from "@remotion/renderer";
-import { mkdirSync, readFileSync } from "node:fs";
+import { mkdirSync } from "node:fs";
 import path from "node:path";
+import { positionFrame, timeline } from "./film-files.mjs";
 
 const [id = "ferry-en", ...requested] = process.argv.slice(2);
-const timeline = JSON.parse(readFileSync(new URL("../src/handdrawn/timeline.json", import.meta.url)));
-const eighth = 60 / timeline.dottedQuarterBpm / 3;
-const at = ([bar, e = 0]) => Math.round(((bar - 1) * timeline.eighthsPerBar + e) * eighth * timeline.fps);
 const targets = requested.length ? requested : timeline.beats.map((beat) => beat.id);
 const toFrame = (target) => {
   const [name, offset = "0"] = target.split("+");
@@ -18,8 +16,8 @@ const toFrame = (target) => {
   else {
     const beat = timeline.beats.find((item) => item.id === name);
     const cue = timeline.cues.find((item) => item.id === name)?.at;
-    if (beat) frame = at([beat.startBar + beat.bars / 2, 0]);
-    else if (cue) frame = at(cue);
+    if (beat) frame = positionFrame(beat.startBar + beat.bars / 2);
+    else if (cue) frame = positionFrame(...cue);
     else throw new Error(`Unknown Beat, cue or frame: ${target}`);
   }
   return frame + Number(offset);

@@ -1,11 +1,10 @@
 // Broad translucent washes adapted from animate-test's beat5/Landscape.tsx.
 // Each clock's fixed SVG is cached as an image; crossfades never regenerate its grain.
 import { AbsoluteFill, Img, interpolate, interpolateColors } from "remotion";
-import { clamp, ramp } from "./anim";
+import { clamp, ramp, smooth } from "./anim";
 import { C } from "./theme";
 import { beatAt, beats, beatStartFrame, eighths, positionFrame, timeline, TOTAL_FRAMES } from "./timeline";
 
-const smooth = (value: number) => value * value * (3 - 2 * value);
 const clockMinutes = (clock: string) => {
   const [hour, minute] = clock.split(":").map(Number);
   return hour * 60 + minute;

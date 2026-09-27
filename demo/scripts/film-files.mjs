@@ -7,6 +7,8 @@ export const demoDir = path.resolve(path.dirname(fileURLToPath(import.meta.url))
 export const compositionIds = ["ferry-en", "ferry-zh"];
 export const timelinePath = path.join(demoDir, "src/handdrawn/timeline.json");
 export const timeline = JSON.parse(readFileSync(timelinePath, "utf8"));
+export const positionFrame = (bar, eighth = 0) =>
+  Math.round(((bar - 1) * timeline.eighthsPerBar + eighth) * 60 / timeline.dottedQuarterBpm / 3 * timeline.fps);
 export const totalFrames = Math.ceil(timeline.bars * timeline.eighthsPerBar * 60 / timeline.dottedQuarterBpm / 3 * timeline.fps);
 export const duration = totalFrames / timeline.fps;
 export const manifestPath = path.join(demoDir, "out/build-manifest.json");

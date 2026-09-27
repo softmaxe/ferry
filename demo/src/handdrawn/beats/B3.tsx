@@ -1,4 +1,4 @@
-import { lerp, ramp } from "../anim";
+import { lerp, ramp, smooth } from "../anim";
 import { Crossing, CROSSING_WINDOW, crossingState, type CrossingTiming } from "../components/Crossing";
 import { Ferri } from "../components/Ferri";
 import { Harbor, projectHarborPoint } from "../components/Harbor";
@@ -15,7 +15,6 @@ const DESKTOP_SCALE = SCREEN.w / 1920;
 const DOCS = { x: 960, y: 557, scale: 1.34 };
 const CAMERA = 1.5;
 const ZOOM = 0.72;
-const smooth = (progress: number) => progress * progress * (3 - 2 * progress);
 
 export const B3 = ({ frame, beat, lang, text }: BeatProps) => {
   const trip = move("b3.enter");

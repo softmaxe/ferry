@@ -1,5 +1,5 @@
 import { useId } from "react";
-import { lerp, pencilSeed, ramp } from "../anim";
+import { lerp, pencilSeed, ramp, smooth } from "../anim";
 import { Boat, Wake } from "../components/Boat";
 import { Ferri } from "../components/Ferri";
 import { Mac, MacScreen } from "../components/Mac";
@@ -11,7 +11,6 @@ import type { BeatProps } from "./types";
 
 const HORIZON = 532;
 const MAC = { x: 586, y: 258, w: 600, h: 384 };
-const smooth = (value: number) => value * value * (3 - 2 * value);
 
 /** The laptop closes, Ferri waves, and the empty boat leaves the harbor. */
 export const B6 = ({ frame, beat, lang, text }: BeatProps) => {

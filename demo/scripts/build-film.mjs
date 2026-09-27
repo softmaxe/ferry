@@ -3,7 +3,7 @@ import { getCompositions, renderMedia, renderStill } from "@remotion/renderer";
 import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { compositionIds, demoDir, fileHash, manifestPath, outputFiles, reviewFiles, sourceHash, timeline } from "./film-files.mjs";
+import { compositionIds, demoDir, fileHash, manifestPath, outputFiles, positionFrame, reviewFiles, sourceHash, timeline } from "./film-files.mjs";
 
 process.chdir(demoDir);
 mkdirSync("out/review", { recursive: true });
@@ -36,8 +36,7 @@ for (const id of compositionIds) {
   for (const [index, beat] of timeline.beats.entries()) {
     const cue = timeline.cues.find((item) => item.id === reviewCues[index]);
     if (!cue) throw new Error(`Missing review cue: ${reviewCues[index]}`);
-    const [bar, eighth] = cue.at;
-    const frame = Math.round(((bar - 1) * timeline.eighthsPerBar + eighth) * 60 / timeline.dottedQuarterBpm / 3 * timeline.fps) + 36;
+    const frame = positionFrame(...cue.at) + 36;
     await renderStill({ serveUrl, composition, frame, imageFormat: "png", output: `out/review/${id}-${beat.id}.png` });
   }
 }

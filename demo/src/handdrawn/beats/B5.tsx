@@ -1,5 +1,5 @@
 import { useId } from "react";
-import { lerp, ramp } from "../anim";
+import { lerp, ramp, smooth } from "../anim";
 import { Crossing, CROSSING_WINDOW, crossingState, type CrossingTiming } from "../components/Crossing";
 import { Ferri } from "../components/Ferri";
 import { Harbor, pierX, projectHarborPoint } from "../components/Harbor";
@@ -21,7 +21,6 @@ const OUTPUT = [
 const SOURCE = { x: -500, y: 156, zoom: 0.8 };
 const INSET = { x: 1300, y: 150, w: 540, h: 390 };
 const DESTINATION = { camera: 4, zoom: 1.1 };
-const smooth = (value: number) => value * value * (3 - 2 * value);
 
 const TerminalBody = ({ typed, output, caret }: { typed: string; output: boolean; caret: boolean }) => (
   <g fontFamily={FONT.mono} style={{ fontVariantLigatures: "none" }}>

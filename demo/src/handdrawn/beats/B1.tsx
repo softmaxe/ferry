@@ -1,4 +1,4 @@
-import { lerp, ramp } from "../anim";
+import { lerp, ramp, smooth } from "../anim";
 import { Ferri } from "../components/Ferri";
 import { Cursor, Mac, MacScreen, SpaceStrip, thumbCenter } from "../components/Mac";
 import { RedPenCircle } from "../components/RedPen";
@@ -13,7 +13,6 @@ const DOCS = { w: 1030, h: 690 };
 const DOCS_HOME = { x: 1265, y: 588 };
 const DOCS_MC = { x: 1390, y: 666, scale: 0.64 };
 const CHAT = { w: 950, h: 600 };
-const smooth = (value: number) => value * value * (3 - 2 * value);
 
 /** The docs window misses Space 2 and springs back into Mission Control. */
 export const B1 = ({ frame, beat, lang, text }: BeatProps) => {
