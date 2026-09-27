@@ -1,7 +1,9 @@
-"""Synthesized horn cue."""
+"""A quiet D-major boat horn with a soft attack."""
 import numpy as np
-from ..dsp import tone
 
 
 def synthesize(sample_rate: int, seed: int, space: int | None = None) -> np.ndarray:
-    return tone(146.832, 0.55, sample_rate, 4)
+    t = np.arange(round(0.6 * sample_rate)) / sample_rate
+    tone = np.sin(2 * np.pi * 146.8324 * t) + 0.22 * np.sin(2 * np.pi * 293.6648 * t)
+    envelope = np.minimum(t / 0.07, 1) * np.minimum((0.6 - t) / 0.2, 1)
+    return 0.7 * tone * envelope

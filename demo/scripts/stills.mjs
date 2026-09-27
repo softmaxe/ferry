@@ -1,28 +1,36 @@
-// Renders chosen frames to PNG with one bundle: node scripts/stills.mjs <composition> <frame|p3.enter> ...
-// A cue name renders the frame where that cue lands; "cue+N" adds N frames.
+// Targets are absolute frames, cue+offset, or a Beat ID (its midpoint).
+// Usage: npm run stills -- ferry-handdrawn-en B1 B6 b3.dock+30 1234
 import { bundle } from "@remotion/bundler";
 import { renderStill, selectComposition } from "@remotion/renderer";
 import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 
-const [id = "ferry-en", ...targets] = process.argv.slice(2);
-const timeline = JSON.parse(readFileSync(new URL("../src/timeline.json", import.meta.url)));
+const [id = "ferry-handdrawn-en", ...requested] = process.argv.slice(2);
+const handdrawn = id.startsWith("ferry-handdrawn-");
+const timeline = JSON.parse(readFileSync(new URL(handdrawn ? "../src/handdrawn/timeline.json" : "../src/timeline.json", import.meta.url)));
 const eighth = 60 / timeline.dottedQuarterBpm / 3;
-
+const at = ([bar, e = 0]) => Math.round(((bar - 1) * timeline.eighthsPerBar + e) * eighth * timeline.fps);
+const targets = requested.length ? requested : (timeline.beats ?? timeline.scenes).map((beat) => beat.id);
 const toFrame = (target) => {
-  const [name, plus = "0"] = target.split("+");
-  if (/^\d+$/.test(name)) return Number(name) + Number(plus);
-  const cue = timeline.cues[name];
-  if (!cue) throw new Error(`unknown cue ${name}`);
-  const [bar, e] = cue;
-  return Math.round(((bar - 1) * timeline.eighthsPerBar + e) * eighth * timeline.fps) + Number(plus);
+  const [name, offset = "0"] = target.split("+");
+  if (!/^\d+$/.test(offset)) throw new Error(`Invalid frame offset: ${target}`);
+  let frame;
+  if (/^\d+$/.test(name)) frame = Number(name);
+  else {
+    const beat = (timeline.beats ?? timeline.scenes).find((item) => item.id === name);
+    const cue = handdrawn ? timeline.cues.find((item) => item.id === name)?.at : timeline.cues[name];
+    if (beat) frame = at([beat.startBar + beat.bars / 2, 0]);
+    else if (cue) frame = at(cue);
+    else throw new Error(`Unknown Beat, cue or frame: ${target}`);
+  }
+  return frame + Number(offset);
 };
-
 const serveUrl = await bundle({ entryPoint: path.resolve("src/index.ts") });
 const composition = await selectComposition({ serveUrl, id });
 mkdirSync("out/stills", { recursive: true });
 for (const target of targets) {
   const frame = toFrame(target);
+  if (frame < 0 || frame >= composition.durationInFrames) throw new Error(`Frame outside ${id}: ${frame}`);
   const output = `out/stills/${id}-${target.replace(/[^\w.+-]/g, "_")}.png`;
   await renderStill({ serveUrl, composition, frame, output, imageFormat: "png" });
   console.log(output);
