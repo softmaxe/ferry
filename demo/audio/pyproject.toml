@@ -1,0 +1,13 @@
+[project]
+name = "ferry-audio"
+version = "0.1.0"
+description = "Sample-free score and cue synthesis for the ferry film"
+requires-python = ">=3.11"
+dependencies = ["numpy>=2.2,<3"]
+
+[dependency-groups]
+dev = ["pytest>=8.3,<10", "fonttools[woff]>=4.58,<5"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
