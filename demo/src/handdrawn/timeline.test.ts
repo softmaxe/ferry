@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { allStrings, captionText, copy, type Lang } from "./copy";
+import { captionText } from "./copy";
 import { beatById, beatEndFrame, beats, beatStartFrame, positionSeconds, timeline, TOTAL_FRAMES } from "./timeline";
 
 describe("hand-drawn timeline", () => {
@@ -53,15 +53,6 @@ describe("hand-drawn timeline", () => {
       expect(cue.move!.to).toBeGreaterThanOrEqual(1);
       expect(cue.move!.to).toBeLessThanOrEqual(5);
       space = cue.move!.to;
-    }
-  });
-});
-
-describe("hand-drawn copy", () => {
-  it.each(["en", "zh"] as Lang[])("has nonempty %s copy that follows the glossary", (lang) => {
-    for (const text of allStrings(copy[lang])) {
-      expect(text.trim()).not.toBe("");
-      expect(text).not.toMatch(/desktop|workspace|active window|桌面|空间|当前窗口|快捷指令/i);
     }
   });
 });

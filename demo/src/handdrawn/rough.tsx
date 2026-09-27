@@ -17,9 +17,10 @@ import type { RoughGenerator } from "roughjs/bin/generator";
  *     />
  *   </svg>
  *
- * `seed` must be fixed: Remotion renders frames in parallel, so every frame has
- * to generate the identical wobble. `build` is only re-run when `seed`/`deps`
- * change, so keep it free of per-frame values and animate via `progress`.
+ * `seed` must be deterministic for a given frame because Remotion renders frames
+ * in parallel. Fixed seeds keep texture still; pencilSeed(base, frame) adds a
+ * repeatable line wobble. Include changing geometry in `deps` so `build` reruns,
+ * and use `progress` to reveal a path without regenerating its geometry.
  */
 
 export type RoughBuild = (g: RoughGenerator, options: Options) => Drawable[];

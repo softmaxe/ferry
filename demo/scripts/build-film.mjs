@@ -50,5 +50,5 @@ writeFileSync(manifestPath, JSON.stringify({
   sourceHash: inputs,
   outputs: Object.fromEntries(outputFiles().map((file) => [file, fileHash(path.join(demoDir, file))])),
 }, null, 2) + "\n");
-execFileSync(process.execPath, ["scripts/check-film.mjs", ...process.argv.slice(2)], { stdio: "inherit" });
+execFileSync(process.execPath, ["scripts/check-film.mjs"], { stdio: "inherit" });
 console.log(`Rendered both films and ${reviewFiles().length} review frames. Contact sheet: out/review/contact-sheet.png`);

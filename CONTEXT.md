@@ -29,3 +29,14 @@ _Avoid_: jump, focus switch
 One Raycast Script Command named "Ferry Window to Space N" that runs ferry with Follow for Space N.
 Its name stays in English in Chinese copy, matching what Raycast shows.
 _Avoid_: shortcut, extension, 快捷指令
+
+**Pier**:
+The demo's numbered representation of a Space in the harbor. A Pier's number is its Space number.
+Chinese: 码头.
+_Avoid_: dock, port, 港口
+
+**Ferri**:
+The ferry mascot, a square navy character with a coral window on its chest. Ferri uses the Mac and
+captains the ferry boat in the demo.
+Chinese: Ferri.
+_Avoid_: Clawd

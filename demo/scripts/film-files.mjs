@@ -4,7 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const demoDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-export const compositionIds = ["ferry-handdrawn-en", "ferry-handdrawn-zh"];
+export const compositionIds = ["ferry-en", "ferry-zh"];
 export const timelinePath = path.join(demoDir, "src/handdrawn/timeline.json");
 export const timeline = JSON.parse(readFileSync(timelinePath, "utf8"));
 export const totalFrames = Math.ceil(timeline.bars * timeline.eighthsPerBar * 60 / timeline.dottedQuarterBpm / 3 * timeline.fps);
