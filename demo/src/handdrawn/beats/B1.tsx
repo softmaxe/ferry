@@ -1,4 +1,3 @@
-import { spring } from "remotion";
 import { lerp, ramp } from "../anim";
 import { Ferri } from "../components/Ferri";
 import { Cursor, Mac, MacScreen, SpaceStrip, thumbCenter } from "../components/Mac";
@@ -33,7 +32,8 @@ export const B1 = ({ frame, beat, lang, text }: BeatProps) => {
     y: lerp(DOCS_MC.y, reach.y, drag) - Math.sin(drag * Math.PI) * 34,
     scale: lerp(DOCS_MC.scale, 0.31, drag),
   };
-  const back = frame < slip ? 0 : spring({ frame: frame - slip, fps: FPS, durationInFrames: drop - slip, config: { damping: 12, stiffness: 130, mass: 0.75 } });
+  const rebound = frame >= drop && frame < drop + eighths(1) ? Math.sin((frame - drop) / eighths(1) * Math.PI) * 0.045 : 0;
+  const back = smooth(ramp(frame, slip, drop)) + rebound;
   const at = frame >= slip ? {
     x: lerp(reach.x, DOCS_MC.x, back), y: lerp(reach.y, DOCS_MC.y, back), scale: lerp(0.31, DOCS_MC.scale, back),
   } : frame >= grab ? dragged : DOCS_MC;

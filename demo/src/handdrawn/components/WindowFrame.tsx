@@ -27,7 +27,7 @@ export const WindowFrame = ({
   return (
     <g data-window-kind={kind} data-focused={focused ? "true" : "false"} opacity={opacity}
       transform={`translate(${x + w / 2} ${y + h / 2}) rotate(${rotate}) scale(${scale}) translate(${-w / 2} ${-h / 2})`}>
-      <defs><clipPath id={clipId}><rect width={w - 4} height={bodyH - 2} x={2} /></clipPath></defs>
+      <defs><clipPath id={clipId}><rect width={Math.max(0, w - 4)} height={Math.max(0, bodyH - 2)} x={2} /></clipPath></defs>
       <rect width={w} height={h} fill={dark ? C.navyDeep : C.whitePaper} />
       <rect width={w} height={WINDOW_TITLE_H} fill={focused ? C.paper : C.paperShade} />
       <g transform={`translate(0 ${WINDOW_TITLE_H})`} clipPath={`url(#${clipId})`}>

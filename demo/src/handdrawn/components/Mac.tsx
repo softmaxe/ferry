@@ -41,6 +41,11 @@ export const Mac = ({ box, children, frame = 0, seed = 301, lid = 1, opacity = 1
         ...Array.from({ length: 17 }, (_, col) => g.line(box.x + 72 + col * (box.w - 144) / 16, bottom + 6, box.x + 64 + col * (box.w - 128) / 16, bottom + 29, o)),
         g.rectangle(box.x + box.w * 0.4, bottom + 34, box.w * 0.2, 10, o),
       ]} />
+      {open < 0.2 && <g opacity={1 - open / 0.2}>
+        <RoughDrawing seed={lineSeed + 3} deps={[box.x, box.w, bottom]} options={{ ...pencil, fill: C.paperShade, fillStyle: "solid" }} build={(g, o) => [
+          g.polygon([[box.x, bottom], [box.x + box.w, bottom], [box.x + box.w + 44, bottom + 50], [box.x - 44, bottom + 50]], o),
+        ]} />
+      </g>}
     </g>
   );
 };
