@@ -5,11 +5,12 @@ import { copy, type Lang } from "./copy";
 import { loadFonts } from "./fonts";
 import { Paper } from "./Paper";
 import { Placeholder } from "./beats/Placeholder";
+import { B2 } from "./beats/B2";
 import type { BeatProps } from "./beats/types";
 import { beatAt, type BeatId } from "./timeline";
 loadFonts();
 const SCENES: Record<BeatId, (props: BeatProps) => React.ReactNode> = {
-  B1: Placeholder, B2: Placeholder, B3: Placeholder,
+  B1: Placeholder, B2, B3: Placeholder,
   B4: Placeholder, B5: Placeholder, B6: Placeholder,
 };
 export const Film = ({ lang }: { lang: Lang }) => {

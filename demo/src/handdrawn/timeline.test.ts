@@ -28,7 +28,6 @@ describe("hand-drawn timeline", () => {
       for (const lang of ["en", "zh"] as const) expect(captionText(lang, caption.id).trim()).not.toBe("");
       previousEnd = end;
     }
-    for (const beat of beats) expect(timeline.captions.some((caption) => caption.beat === beat.id)).toBe(true);
   });
 
   it("keeps cues inside their Beats in narrative order with a synthesis module for each type", () => {

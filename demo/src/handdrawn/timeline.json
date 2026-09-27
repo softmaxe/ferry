@@ -15,7 +15,6 @@
   ],
   "captions": [
     { "id": "opening", "beat": "B1", "start": [3, 0], "end": [7, 0] },
-    { "id": "title", "beat": "B2", "start": [8, 0], "end": [11, 0] },
     { "id": "raycast", "beat": "B3", "start": [11, 0], "end": [15, 0] },
     { "id": "crossing", "beat": "B3", "start": [15, 0], "end": [19, 0] },
     { "id": "hotkeys", "beat": "B4", "start": [19, 0], "end": [22, 0] },

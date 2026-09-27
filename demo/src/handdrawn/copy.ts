@@ -3,7 +3,6 @@ export const ferryCommandTitle = (space: number) => `Ferry Window to Space ${spa
 const en = {
   captions: {
     opening: "There has to be a faster way.",
-    title: "Any window. Any Space. One keystroke.",
     raycast: "Run it from Raycast.",
     crossing: "Your window, from Pier 1 to Pier 2.",
     hotkeys: "Give each Space a hotkey.",
@@ -22,7 +21,6 @@ export type Copy = typeof en;
 const zh: Copy = {
   captions: {
     opening: "一定有更快的办法。",
-    title: "一个按键，把窗口送到任意 Space。",
     raycast: "在 Raycast 里直接运行。",
     crossing: "把窗口从 1 号码头送到 2 号码头。",
     hotkeys: "给每个 Space 配一个快捷键。",
