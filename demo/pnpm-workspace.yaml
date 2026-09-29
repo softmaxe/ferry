@@ -1,0 +1,3 @@
+# esbuild's postinstall verifies its platform binary; allow it under pnpm's build-script gate.
+allowBuilds:
+  esbuild: true
