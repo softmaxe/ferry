@@ -20,7 +20,8 @@ Nothing here is part of the ferry binary or its release.
 
 ## Requirements
 
-- Node.js 22 or later, and `npm install` in this directory.
+- [mise](https://mise.jdx.dev) for the Node.js and pnpm versions pinned in `mise.toml`: run
+  `mise install`, then `pnpm install` in this directory.
 - For the music: [uv](https://docs.astral.sh/uv/), `brew install fluid-synth ffmpeg`, and these
   SoundFonts in `~/.cache/ferry-demo/sf2` (or set `FERRY_DEMO_SOUNDFONTS`):
   - `SalamanderGrandPiano-V3+20200602.sf2` from
@@ -32,28 +33,28 @@ Nothing here is part of the ferry binary or its release.
 ## Build
 
 ```sh
-npm run music        # compose and mix public/music.wav
-npm run render:en    # out/ferry-en.mp4, 1920×1080, 60 fps
-npm run render:zh    # out/ferry-zh.mp4
-npm run readme       # out/ferry-*-readme.mp4, re-encoded under GitHub's 10 MB attachment limit
-npm run studio       # scrub the film in the browser
+pnpm run music       # compose and mix public/music.wav
+pnpm run render:en   # out/ferry-en.mp4, 1920×1080, 60 fps
+pnpm run render:zh   # out/ferry-zh.mp4
+pnpm run readme      # out/ferry-*-readme.mp4, re-encoded under GitHub's 10 MB attachment limit
+pnpm run studio      # scrub the film in the browser
 ```
 
 Check frames without rendering the film, and tile them into a contact sheet:
 
 ```sh
-node scripts/stills.mjs ferry-en p3.sail+40 p6.reveal
+pnpm run stills ferry-en p3.sail+40 p6.reveal
 scripts/sheet.sh out/sheet.png out/stills/ferry-en-p3.sail+40.png out/stills/ferry-en-p6.reveal.png
 ```
 
 ## Tests
 
 ```sh
-npm run typecheck
-npm test                             # timeline consistency, copy content, font subsets
+pnpm run typecheck
+pnpm test                            # timeline consistency, copy content, font subsets
 uv run --project music pytest music  # score fits the film and hits its cues
 ```
 
 CI ignores `demo/`. Run only the checks relevant to the change: typecheck for TypeScript,
-`npm test` for timeline, copy, or font logic, and pytest for the score, mix, or shared timeline.
+`pnpm test` for timeline, copy, or font logic, and pytest for the score, mix, or shared timeline.
 Review wording and musical choices in the preview.
