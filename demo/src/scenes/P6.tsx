@@ -1,13 +1,16 @@
+import type { ReactNode } from "react";
 import { FULL, cuePop, cueProgress, ease } from "../anim";
 import { AppWindow } from "../components/AppWindow";
-import { Hop, type HopPlan } from "../components/Hop";
+import { Hop } from "../components/Hop";
 import { Caption, ClockChip, Keycaps } from "../components/Overlays";
 import { Shot } from "../components/Shot";
-import { SpaceView, type Guest } from "../components/SpaceView";
+import { SpaceView } from "../components/SpaceView";
 import { Desktop } from "../components/Desktop";
-import { ARRIVAL, SIZE } from "../layouts";
+import type { Copy } from "../copy";
+import { SIZE } from "../layouts";
 import { C, FONT } from "../theme";
 import { FRAMES_PER_EIGHTH, cueFrame, eighths, trip } from "../timeline";
+import { residentCast, tripModel } from "../trip";
 import type { SceneProps } from "./types";
 
 // Early evening, on a call: the terminal is sent to Space 4 with --no-follow while the screen
@@ -41,40 +44,46 @@ const terminalLines = (typed: string, output: boolean, caret: boolean) => (
   </g>
 );
 
+/** The scene's cast and its one no-follow Trip; `lines` is what the terminal shows. */
+export const p6Trips = (text: Copy, lines?: ReactNode) =>
+  tripModel({
+    screen: TRIP.from,
+    cast: [
+      ...residentCast(text),
+      { id: "call", kind: "call", title: text.windows.call, space: TRIP.from, rect: CALL },
+      { id: "terminal", kind: "terminal", title: text.windows.terminal, space: TRIP.from, rect: TERMINAL, lines },
+    ],
+    trips: [{ cue: "p6.enter", window: "terminal", follow: false }],
+  });
+
 export const P6 = ({ frame: f, text }: SceneProps) => {
   const typeStart = cueFrame("p6.type");
   const typed = COMMAND.slice(0, Math.max(0, Math.min(COMMAND.length, Math.floor(((f - typeStart) / (eighths(5.5))) * COMMAND.length))));
-  const entered = f >= cueFrame("p6.enter");
+  const enterAt = cueFrame("p6.enter");
 
-  const call: Guest = { kind: "call", title: text.windows.call, rect: CALL };
-  const terminal: Guest = { kind: "terminal", title: text.windows.terminal, rect: TERMINAL, lines: terminalLines(typed, false, !entered) };
-  const plan: HopPlan = {
-    at: cueFrame("p6.enter"),
-    from: TRIP.from,
-    to: TRIP.to,
-    follow: false,
-    window: terminal,
-    landing: { ...ARRIVAL[TRIP.to], ...SIZE.terminal },
-  };
-  // Without follow the hop ends once the boat has left and the sea has settled.
-  const hopping = f >= plan.at && f < plan.at + eighths(4);
+  const trips = p6Trips(text, terminalLines(typed, false, f < enterAt));
+  const guestsOn = (space: number) => trips.windowsOn(space, f).filter((w) => !w.resident);
+  const active = trips.activeTrip(f);
+  const shown = trips.screenSpace(f);
 
   const ping = cueProgress(f, "p6.inset", 3, ease.out);
   const inset = cuePop(f, "p6.inset", 0, 14);
   const insetScreen = (
-    <Desktop space={plan.to} frame={f} app={text.windows.terminal} clock={CLOCK}>
-      <AppWindow kind="terminal" {...plan.landing} title={text.windows.terminal} lines={terminalLines(COMMAND, true, false)} frame={f} />
+    <Desktop space={TRIP.to} frame={f} app={trips.focusedOn(TRIP.to, f)?.title ?? "Finder"} clock={CLOCK}>
+      {guestsOn(TRIP.to).map((w) => (
+        <AppWindow key={w.id} kind={w.kind} {...w.rect} title={w.title} lines={w.id === "terminal" ? terminalLines(COMMAND, true, false) : w.lines} frame={f} />
+      ))}
     </Desktop>
   );
 
-  const screen = hopping ? (
-    <Hop frame={f} plan={plan} text={text} clock={CLOCK} guestsOf={(s) => (s === plan.from ? [call] : [])} />
+  const screen = active ? (
+    <Hop frame={f} plan={active} text={text} clock={CLOCK} guestsOf={(s) => guestsOn(s).filter((w) => w.id !== active.window.id)} />
   ) : (
-    <SpaceView space={plan.from} frame={f} text={text} clock={CLOCK} guests={entered ? [call] : [call, terminal]} ping={ping} pingSpace={plan.to} />
+    <SpaceView space={shown} frame={f} text={text} clock={CLOCK} guests={guestsOn(shown)} ping={ping} pingSpace={TRIP.to} />
   );
 
   const reveal = cueProgress(f, "p6.reveal", 2, ease.out);
-  const enterPress = Math.max(0, Math.sin(((f - plan.at) / FRAMES_PER_EIGHTH) * Math.PI)) * (f >= plan.at ? 1 : 0);
+  const enterPress = Math.max(0, Math.sin(((f - enterAt) / FRAMES_PER_EIGHTH) * Math.PI)) * (f >= enterAt ? 1 : 0);
   const enterShow = cuePop(f, "p6.enter", -0.4, 14) * (1 - cueProgress(f, "p6.enter", 1, ease.in, 1));
 
   return (
@@ -92,7 +101,7 @@ export const P6 = ({ frame: f, text }: SceneProps) => {
               </svg>
               <rect x={10} y={180} width={100} height={30} rx={10} fill={C.navyInk} opacity={0.85} />
               <text x={60} y={202} textAnchor="middle" fontFamily={FONT.ui} fontWeight={700} fontSize={18} fill={C.cream}>
-                Space {plan.to}
+                Space {TRIP.to}
               </text>
             </g>
           )}
