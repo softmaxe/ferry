@@ -1,69 +1,59 @@
 import { FULL, cuePop, cueProgress, ease, viewportBetween } from "../anim";
 import { Character } from "../components/Character";
-import { Hop, type HopPlan } from "../components/Hop";
+import { Hop } from "../components/Hop";
 import { Caption, ClockChip, Keycaps } from "../components/Overlays";
 import { hotkeyLabel } from "../components/Raycast";
 import { Room, SCREEN } from "../components/Room";
 import { Shot } from "../components/Shot";
-import { SpaceView, type Guest } from "../components/SpaceView";
+import { SpaceView } from "../components/SpaceView";
 import type { Copy } from "../copy";
 import { ARRIVAL, SIZE } from "../layouts";
 import { FRAMES_PER_EIGHTH, cueFrame, eighths, trip } from "../timeline";
+import { residentCast, tripModel, type TripSpec } from "../trip";
 import { DESIGN_ON_2 } from "./P4";
 import type { SceneProps } from "./types";
 
 // Hotkey montage: three windows, three keystrokes, the screen following each one.
 
 const CLOCK = "14:05";
-const HOP_LENGTH = eighths(5);
 
-const hop = (cue: string, window: Guest, size: { w: number; h: number }): HopPlan => {
-  const { from, to } = trip(cue);
-  return { at: cueFrame(cue), from, to, follow: true, window, landing: { ...ARRIVAL[to], ...size } };
-};
+const TRIPS: TripSpec[] = [
+  { cue: "p5.move1", window: "design", follow: true },
+  { cue: "p5.move2", window: "dm", follow: true },
+  { cue: "p5.move3", window: "music", follow: true },
+];
 
-const plans = (text: Copy) => {
-  const design: Guest = { kind: "design", title: text.windows.design, rect: DESIGN_ON_2 };
-  const dm: Guest = { kind: "chat", title: text.windows.dm, rect: { x: 300, y: 330, ...SIZE.chat } };
-  const music: Guest = { kind: "music", title: text.windows.music, rect: { x: 260, y: 420, ...SIZE.music } };
-  const hops: (HopPlan & { popAt?: number })[] = [
-    hop("p5.move1", design, SIZE.design),
-    { ...hop("p5.move2", dm, SIZE.chat), popAt: cueFrame("p5.move1") + eighths(5) },
-    { ...hop("p5.move3", music, SIZE.music), popAt: cueFrame("p5.move2") + eighths(5) },
-  ];
-  return hops;
-};
-
-/** Windows on `space` at frame `f`, not counting one that is mid-hop. */
-const guestsAt = (space: number, f: number, text: Copy, hops: ReturnType<typeof plans>): Guest[] => {
-  const out: Guest[] = [];
-  if (space === 2) out.push({ kind: "docs", title: text.windows.docs, rect: { ...ARRIVAL[2], ...SIZE.docs } });
-  for (const hop of hops) {
-    const appeared = hop.popAt === undefined || f >= hop.popAt;
-    const departed = f >= hop.at + eighths(0.5);
-    const arrived = f >= hop.at + eighths(4.5);
-    if (space === hop.from && appeared && !departed) out.push(hop.window);
-    if (space === hop.to && arrived) out.push({ ...hop.window, rect: hop.landing });
-  }
-  return out;
-};
+/** The scene's cast and its three Follow Trips; DM and music pop in after the Trip before theirs. */
+export const p5Trips = (text: Copy) =>
+  tripModel({
+    screen: trip("p5.move1").from,
+    cast: [
+      ...residentCast(text),
+      { id: "docs", kind: "docs", title: text.windows.docs, space: 2, rect: { ...ARRIVAL[2], ...SIZE.docs } },
+      { id: "design", kind: "design", title: text.windows.design, space: 2, rect: DESIGN_ON_2 },
+      { id: "dm", kind: "chat", title: text.windows.dm, space: 3, rect: { x: 300, y: 330, ...SIZE.chat }, appearsAt: cueFrame("p5.move1") + eighths(5) },
+      { id: "music", kind: "music", title: text.windows.music, space: 1, rect: { x: 260, y: 420, ...SIZE.music }, appearsAt: cueFrame("p5.move2") + eighths(5) },
+    ],
+    trips: TRIPS,
+  });
 
 export const P5 = ({ frame: f, text }: SceneProps) => {
-  const hops = plans(text);
-  const active = hops.find((h) => f >= h.at && f < h.at + HOP_LENGTH);
-  const settledSpace = [...hops].reverse().find((h) => f >= h.at + HOP_LENGTH)?.to ?? 2;
+  const trips = p5Trips(text);
+  const active = trips.activeTrip(f);
+  const shown = trips.screenSpace(f);
+  const guestsOn = (space: number) => trips.windowsOn(space, f).filter((w) => !w.resident);
 
   const zoomOut = cueProgress(f, "p5.zoomOut", 2, ease.inOut);
   const inRoom = f >= cueFrame("p5.zoomOut");
 
   const screen = active ? (
-    <Hop frame={f} plan={active} text={text} clock={CLOCK} guestsOf={(s) => guestsAt(s, f, text, hops.filter((h) => h !== active))} />
+    <Hop frame={f} plan={active} text={text} clock={CLOCK} guestsOf={(s) => guestsOn(s).filter((w) => w.id !== active.window.id)} />
   ) : (
-    <SpaceView space={settledSpace} frame={f} text={text} clock={CLOCK} guests={guestsAt(settledSpace, f, text, hops)} />
+    <SpaceView space={shown} frame={f} text={text} clock={CLOCK} guests={guestsOn(shown)} />
   );
 
-  const current = hops.findIndex((h) => f >= h.at - eighths(0.5) && f < h.at + eighths(1.5));
-  const hop = hops[current];
+  // The keycaps show from half an eighth before each keystroke until the window has lifted.
+  const hop = TRIPS.map(({ cue }) => ({ at: cueFrame(cue), to: trip(cue).to })).find(({ at }) => f >= at - eighths(0.5) && f < at + eighths(1.5));
   const press = hop ? Math.max(0, Math.sin(((f - hop.at) / FRAMES_PER_EIGHTH) * Math.PI)) : 0;
   const keysShow = hop ? Math.min(1, (f - (hop.at - eighths(0.5))) / 6) * Math.min(1, (hop.at + eighths(1.5) - f) / 6) : 0;
 
