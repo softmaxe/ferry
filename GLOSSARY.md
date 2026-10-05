@@ -29,3 +29,22 @@ _Avoid_: jump, focus switch
 One Raycast Script Command named "Ferry Window to Space N" that runs ferry with Follow for Space N.
 Its name stays in English in Chinese copy, matching what Raycast shows.
 _Avoid_: shortcut, extension, 快捷指令
+
+## Demo video
+
+**Trip**:
+One window carried by the ferry boat from its Space to the Destination Space, from the keystroke
+or Enter that sends it until its Landing.
+Chinese: 行程.
+_Avoid_: hop, move, voyage
+
+**Arrival**:
+The musical moment a Trip reaches the Destination Space, where the score rings that Space's note.
+Chinese: 到达.
+_Avoid_: landing, dock
+
+**Landing**:
+The moment the window comes to rest on the Destination Space, whether or not the screen shows that
+Space; it may fall after the Arrival.
+Chinese: 落地.
+_Avoid_: arrival, unload
