@@ -7,14 +7,14 @@ import { SpaceView, type Guest } from "../components/SpaceView";
 import { Desktop } from "../components/Desktop";
 import { ARRIVAL, SIZE } from "../layouts";
 import { C, FONT } from "../theme";
-import { FRAMES_PER_EIGHTH, cueFrame, eighths, move } from "../timeline";
+import { FRAMES_PER_EIGHTH, cueFrame, eighths, trip } from "../timeline";
 import type { SceneProps } from "./types";
 
 // Early evening, on a call: the terminal is sent to Space 4 with --no-follow while the screen
 // stays on the call. Then ferry's own report of that move, and what it doesn't need.
 
 const CLOCK = "17:30";
-const TRIP = move("p6.enter");
+const TRIP = trip("p6.enter");
 const COMMAND = `ferry --no-follow --verbose ${TRIP.to}`;
 // Real output from `ferry --verbose` on macOS 26: window id, timings and Space 4's id as measured.
 const OUTPUT = ["window 12877 (via accessibility) -> space 4 (id 1):", "moved in 3.4 ms, not followed, total 106.9 ms"];
@@ -50,7 +50,8 @@ export const P6 = ({ frame: f, text }: SceneProps) => {
   const terminal: Guest = { kind: "terminal", title: text.windows.terminal, rect: TERMINAL, lines: terminalLines(typed, false, !entered) };
   const plan: HopPlan = {
     at: cueFrame("p6.enter"),
-    ...TRIP,
+    from: TRIP.from,
+    to: TRIP.to,
     follow: false,
     window: terminal,
     landing: { ...ARRIVAL[TRIP.to], ...SIZE.terminal },

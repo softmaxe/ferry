@@ -69,12 +69,9 @@ def total_eighths() -> float:
     return TIMELINE["bars"] * EIGHTHS_PER_BAR + TIMELINE["tailSeconds"] / EIGHTH_SECONDS
 
 
-# Where each ferry trip in TIMELINE["moves"] lands, when that isn't four eighths after it starts.
-ARRIVAL_CUES = {"p3.enter": "p3.dock", "p6.enter": "p6.inset"}
-
-
-def arrival_eighths(move: str) -> float:
-    return cue_eighths(ARRIVAL_CUES[move]) if move in ARRIVAL_CUES else cue_eighths(move) + 4
+def arrival_eighths(trip: str) -> float:
+    """The Arrival of the Trip starting on cue `trip`: where the score rings its Destination Space."""
+    return at(*TIMELINE["trips"][trip]["arrival"])
 
 
 def space_pitch(space: int) -> int:
@@ -275,9 +272,9 @@ def compose() -> list[Note]:
     s.gliss(at(12, 4.8), at(13, 0.4), "A5", "A3", "A7", 52, down=True)
     s.gliss(cue_eighths("p4.close"), cue_eighths("p4.close") + 1.5, "E6", "A4", "A", 50, down=True)
     # The glissando runs the way the Spaces slide: up for a higher Space, down for a lower one.
-    for move, symbol in [("p5.move1", "D"), ("p5.move2", "A/C#"), ("p5.move3", "Bm")]:
-        source, destination = TIMELINE["moves"][move]
-        s.gliss(cue_eighths(move), cue_eighths(move) + 3, "D4", "D6", symbol, 60, down=destination < source)
+    for cue, symbol in [("p5.move1", "D"), ("p5.move2", "A/C#"), ("p5.move3", "Bm")]:
+        trip = TIMELINE["trips"][cue]
+        s.gliss(cue_eighths(cue), cue_eighths(cue) + 3, "D4", "D6", symbol, 60, down=trip["to"] < trip["from"])
     s.gliss(at(20, 4.8), at(21, 0.4), "B5", "B3", "A", 52, down=True)
     s.gliss(cue_eighths("p6.sail"), cue_eighths("p6.sail") + 2.5, "G4", "G6", "G", 56)
     s.roll("harp", cue_eighths("p7.endCard"), ["G3", "D4", "G4", "B4", "D5", "G5"], 60, spread=0.15)
@@ -289,10 +286,10 @@ def compose() -> list[Note]:
     s.add("glock", cue_eighths("p3.enter"), 3, "A6", 56)
     for i in range(1, 6):
         s.add("glock", cue_eighths(f"p4.record{i}"), 3, space_pitch(i), 62)
-    # Each arrival rings its destination Space; the trip without follow rings softer.
-    for move, (_, destination) in TIMELINE["moves"].items():
-        quiet = move == "p6.enter"
-        s.add("glock", arrival_eighths(move), 3 if move.startswith("p5.") else 4, space_pitch(destination), 58 if quiet else 66)
+    # Each Arrival rings its Destination Space; the Trip without follow rings softer.
+    for cue, trip in TIMELINE["trips"].items():
+        quiet = cue == "p6.enter"
+        s.add("glock", arrival_eighths(cue), 3 if cue.startswith("p5.") else 4, space_pitch(trip["to"]), 58 if quiet else 66)
     for cue, pitch in [("p6.badge1", "G6"), ("p6.badge2", "A6"), ("p6.badge3", "B6")]:
         s.add("glock", cue_eighths(cue), 3, pitch, 64)
     s.add("glock", cue_eighths("p7.install"), 4, "A6", 56)

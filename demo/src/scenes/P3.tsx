@@ -8,7 +8,7 @@ import { Shot } from "../components/Shot";
 import { SpaceView } from "../components/SpaceView";
 import type { Copy } from "../copy";
 import { ARRIVAL, SIZE, type WinRect } from "../layouts";
-import { FRAMES_PER_EIGHTH, cueFrame, eighths, move } from "../timeline";
+import { FRAMES_PER_EIGHTH, cueFrame, eighths, trip } from "../timeline";
 import type { SceneProps } from "./types";
 
 // Raycast runs "Ferry Window to Space 2"; the harbor shows the docs window crossing to Space 2.
@@ -19,7 +19,7 @@ const BOAT_SCALE = 0.34;
 // Frames piers 1–3 so the crossing reads large; the other Spaces peek in from the right.
 const WIDE: Rect = { x: -100, y: 200, w: 1250, h: 703.125 };
 
-const TRIP = move("p3.enter");
+const TRIP = trip("p3.enter");
 const DOCS_BEFORE = { ...ARRIVAL[TRIP.from], ...SIZE.docs };
 const DOCS_AFTER = { ...ARRIVAL[TRIP.to], ...SIZE.docs };
 

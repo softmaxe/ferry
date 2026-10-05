@@ -11,6 +11,13 @@ export type Scene = {
   clock: string;
 };
 
+/** One window's ferry ride between Spaces; see GLOSSARY.md (Trip, Arrival). */
+export type Trip = {
+  from: number;
+  to: number;
+  arrival: [bar: number, eighth: number];
+};
+
 export const timeline = data as unknown as {
   fps: number;
   dottedQuarterBpm: number;
@@ -19,8 +26,11 @@ export const timeline = data as unknown as {
   tailSeconds: number;
   scenes: Scene[];
   cues: Record<string, [bar: number, eighth: number]>;
-  /** The ferry trips: the cue each one starts on, and the Spaces it goes from and to. */
-  moves: Record<string, [from: number, to: number]>;
+  /**
+   * The Trips, keyed by the cue each one starts on: the source Space, the Destination Space, and
+   * the Arrival, where the score rings the Destination Space.
+   */
+  trips: Record<string, Trip>;
 };
 
 export const FPS = timeline.fps;
@@ -50,12 +60,11 @@ const cue = (name: string) => {
 export const cueSeconds = (name: string) => positionSeconds(...cue(name));
 export const cueFrame = (name: string) => positionFrame(...cue(name));
 
-/** The Spaces the ferry trip starting on cue `name` goes between. */
-export const move = (name: string) => {
-  const spaces = timeline.moves[name];
-  if (!spaces) throw new Error(`no move starts on cue: ${name}`);
-  const [from, to] = spaces;
-  return { from, to };
+/** The Trip starting on cue `name`. */
+export const trip = (name: string): Trip => {
+  const found = timeline.trips[name];
+  if (!found) throw new Error(`no Trip starts on cue: ${name}`);
+  return found;
 };
 
 export const sceneStartFrame = (scene: Scene) => positionFrame(scene.startBar);

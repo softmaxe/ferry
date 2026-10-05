@@ -71,11 +71,11 @@
     "p7.final": [28, 0]
   },
 
-  "moves": {
-    "p3.enter": [1, 2],
-    "p5.move1": [2, 3],
-    "p5.move2": [3, 1],
-    "p5.move3": [1, 5],
-    "p6.enter": [1, 4]
+  "trips": {
+    "p3.enter": { "from": 1, "to": 2, "arrival": [12, 1] },
+    "p5.move1": { "from": 2, "to": 3, "arrival": [17, 4] },
+    "p5.move2": { "from": 3, "to": 1, "arrival": [18, 4] },
+    "p5.move3": { "from": 1, "to": 5, "arrival": [19, 4] },
+    "p6.enter": { "from": 1, "to": 4, "arrival": [22, 4] }
   }
 }

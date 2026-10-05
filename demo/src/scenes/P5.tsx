@@ -8,7 +8,7 @@ import { Shot } from "../components/Shot";
 import { SpaceView, type Guest } from "../components/SpaceView";
 import type { Copy } from "../copy";
 import { ARRIVAL, SIZE } from "../layouts";
-import { FRAMES_PER_EIGHTH, cueFrame, eighths, move } from "../timeline";
+import { FRAMES_PER_EIGHTH, cueFrame, eighths, trip } from "../timeline";
 import { DESIGN_ON_2 } from "./P4";
 import type { SceneProps } from "./types";
 
@@ -18,7 +18,7 @@ const CLOCK = "14:05";
 const HOP_LENGTH = eighths(5);
 
 const hop = (cue: string, window: Guest, size: { w: number; h: number }): HopPlan => {
-  const { from, to } = move(cue);
+  const { from, to } = trip(cue);
   return { at: cueFrame(cue), from, to, follow: true, window, landing: { ...ARRIVAL[to], ...size } };
 };
 
