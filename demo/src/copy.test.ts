@@ -8,7 +8,7 @@ describe("copy", () => {
     }
   });
 
-  // CONTEXT.md: "Space" is the only word for a Mission Control desktop, in both languages.
+  // GLOSSARY.md: "Space" is the only word for a Mission Control desktop, in both languages.
   it("follows the glossary in English", () => {
     for (const s of strings(copy.en)) expect(s).not.toMatch(/desktop|workspace|active window/i);
   });

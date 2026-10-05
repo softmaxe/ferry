@@ -13,7 +13,7 @@ Nothing here is part of the ferry binary or its release.
 | `src/timeline.json` | Tempo map and every picture cue. Both the animation and the score read it. |
 | `src/scenes/P1.tsx` … `P7.tsx` | The seven four-bar phrases of the film. |
 | `src/components/` | Characters, rooms, the macOS desktop, Raycast, the harbor, the ferry. |
-| `src/copy.ts` | On-screen text in English and Chinese. Terms follow `../CONTEXT.md`. |
+| `src/copy.ts` | On-screen text in English and Chinese. Terms follow `../GLOSSARY.md`. |
 | `music/score.py` | The score, as notes in eighth-note time. |
 | `music/render.py` | FluidSynth stems, pedalboard mix, loudness normalization → `public/music.wav`. |
 | `music/BRIEF.md` | The music brief and cue sheet, for replacing the score with another track. |
