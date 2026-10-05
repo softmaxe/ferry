@@ -6,6 +6,18 @@ import { C } from "../theme";
 
 export const DECK = { left: -350, right: 255, y: -215 };
 
+/**
+ * The world rectangle of a window riding on the deck of a boat whose keel is at (x, y), drawn
+ * at `scale`: centred on the deck, resting on it, and keeping the window's aspect ratio.
+ */
+export const onDeck = (x: number, y: number, scale: number, size: { w: number; h: number }) => {
+  const w = 0.62 * 880 * scale;
+  const h = (w * size.h) / size.w;
+  const cx = x + ((DECK.left + DECK.right) / 2) * scale;
+  const bottom = y + DECK.y * scale + 6;
+  return { x: cx - w / 2, y: bottom - h, w, h };
+};
+
 const HULL =
   "M 262 717 H 318 Q 336 717 338 698 Q 342 677 362 677 H 858 Q 880 677 905 660 Q 935 636 975 635 H 1113 Q 1140 637 1130 662 L 1090 752 Q 1040 862 920 890 Q 905 892 890 892 H 332 Q 292 892 280 855 L 247 748 Q 242 717 262 717 Z";
 const STRIPE =

@@ -1,6 +1,6 @@
 import { FULL, bob, cuePop, cueProgress, ease, keys, lerp, viewportBetween, type Rect } from "../anim";
 import { AppWindow } from "../components/AppWindow";
-import { Boat, DECK, Wake } from "../components/Boat";
+import { Boat, Wake, onDeck } from "../components/Boat";
 import { Harbor, WATER, cardRect, onCard, pierX } from "../components/Harbor";
 import { Caption, Keycaps } from "../components/Overlays";
 import { RaycastPanel } from "../components/Raycast";
@@ -22,15 +22,6 @@ const WIDE: Rect = { x: -100, y: 200, w: 1250, h: 703.125 };
 const TRIP = trip("p3.enter");
 const DOCS_BEFORE = { ...ARRIVAL[TRIP.from], ...SIZE.docs };
 const DOCS_AFTER = { ...ARRIVAL[TRIP.to], ...SIZE.docs };
-
-/** The world rectangle of a window riding on the deck of a boat at (x, y). */
-export const onDeck = (x: number, y: number, scale: number, size: { w: number; h: number }) => {
-  const w = 0.62 * 880 * scale;
-  const h = (w * size.h) / size.w;
-  const cx = x + ((DECK.left + DECK.right) / 2) * scale;
-  const bottom = y + DECK.y * scale + 6;
-  return { x: cx - w / 2, y: bottom - h, w, h, k: w / size.w };
-};
 
 const SpaceScreen = ({ space, frame, text, extra }: {
   space: number;

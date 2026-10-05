@@ -4,7 +4,7 @@ import type { Copy } from "../copy";
 import { C } from "../theme";
 import { eighths } from "../timeline";
 import { AppWindow } from "./AppWindow";
-import { Boat, DECK } from "./Boat";
+import { Boat, onDeck } from "./Boat";
 import { Dock, MenuBar, Wallpaper } from "./Desktop";
 import type { Guest } from "./SpaceView";
 
@@ -41,13 +41,6 @@ export const hopScreenSpace = (plan: HopPlan, frame: number) => {
   return Math.round(lerp(plan.from, plan.to, q));
 };
 
-const deckRect = (x: number, keel: number, size: { w: number; h: number }) => {
-  const w = 0.62 * 880 * BOAT_SCALE;
-  const h = (w * size.h) / size.w;
-  const cx = x + ((DECK.left + DECK.right) / 2) * BOAT_SCALE;
-  return { x: cx - w / 2, y: keel + DECK.y * BOAT_SCALE + 6 - h, w, h };
-};
-
 type Props = {
   frame: number;
   plan: HopPlan;
@@ -75,7 +68,7 @@ export const Hop = ({ frame: f, plan, text, clock, guestsOf }: Props) => {
   const b = bob(f, 6, 60);
   const boatX = plan.follow ? 960 + Math.sin(travelT * Math.PI) * 60 * dir : lerp(960, 2500, keys(f, [[travel[0], 0], [travel[1], 1]], ease.in));
   const keel = waterTop + 44 + b.y;
-  const deck = deckRect(boatX, keel, plan.window.rect);
+  const deck = onDeck(boatX, keel, BOAT_SCALE, plan.window.rect);
   const speed = plan.follow ? Math.sin(travelT * Math.PI) : keys(f, [[travel[0], 0], [travel[0] + eighths(0.8), 1]], ease.out);
 
   const src = plan.window.rect;
