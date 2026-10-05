@@ -1,4 +1,4 @@
-// On-screen text for each language. Terms follow CONTEXT.md; anything a real program prints
+// On-screen text for each language. Terms follow GLOSSARY.md; anything a real program prints
 // (Raycast command names, ferry output, shell commands) stays in English in both versions.
 
 export type Lang = "en" | "zh";
