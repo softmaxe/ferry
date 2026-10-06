@@ -1,5 +1,6 @@
 // The Trip model: where every window of a scene is, and which Space the screen shows, at any
-// frame. Pure data, no drawing; see GLOSSARY.md (Trip, Arrival, Landing).
+// frame. No drawing: a cast window's `lines` is content the model only carries along for the
+// renderers. See GLOSSARY.md (Trip, Arrival, Landing).
 import type { ReactNode } from "react";
 import { ease, keys, lerp } from "./anim";
 import type { WindowKind } from "./components/AppWindow";
@@ -31,6 +32,13 @@ export type TripSpec = { cue: string; window: string; follow: boolean };
 
 type Span = readonly [start: number, end: number];
 
+// A Trip's phases, in eighths after its keystroke or Enter.
+const LIFT: Span = [0.5, 1.5];
+const TRAVEL: Span = [1.5, 3.5];
+const UNLOAD: Span = [3.5, 4.5];
+/** Eighths the sea takes to drain once the boat starts to leave. */
+const SEA_DRAIN = 0.5;
+
 type ResolvedTrip = {
   cue: string;
   /** Frame of the keystroke or Enter that sends the window. */
@@ -47,7 +55,10 @@ type ResolvedTrip = {
   arrival: number;
   /** First frame the window is on the Destination Space. */
   landingAt: number;
-  /** First frame after the Trip is drawn: the boat has left and the sea has settled. */
+  /**
+   * First frame after the Trip is drawn: the boat has left and the sea has settled. For a Follow
+   * Trip this is half an eighth past Landing, so its active window includes the boat's departure.
+   */
   end: number;
 };
 
@@ -55,7 +66,10 @@ type ResolvedTrip = {
 export type ActiveTrip = ResolvedTrip & { progress: { lift: number; travel: number; unload: number } };
 
 export type TripModel = {
-  /** The Trip being drawn at `frame`, if any. */
+  /**
+   * The Trip being drawn at `frame`, if any: from its keystroke or Enter until `end`, which for a
+   * Follow Trip runs half an eighth past Landing while the boat departs.
+   */
   activeTrip: (frame: number) => ActiveTrip | undefined;
   /** The Space the screen shows at `frame`. */
   screenSpace: (frame: number) => number;
@@ -66,7 +80,9 @@ export type TripModel = {
   /**
    * The Focused window at `frame`, the one the menu bar names. While a Trip is drawn it is the
    * carried window, which keeps keyboard focus on the boat although it is on no Space; otherwise
-   * it is the Focused window on the Space the screen shows.
+   * it is the Focused window on the Space the screen shows. Keeping the moved window Focused
+   * means the menu bar names the window the viewer is watching ride across, not whatever is left
+   * behind on the Space (spec #26, user story 29), as the film already did (user story 31).
    */
   focusedWindow: (frame: number) => PlacedWindow | undefined;
 };
@@ -91,14 +107,12 @@ const resolve = (spec: TripSpec, cast: CastWindow[]): ResolvedTrip => {
   const window = cast.find((w) => w.id === spec.window);
   if (!window) throw new Error(`no cast window ${spec.window} for the Trip on ${spec.cue}`);
   const at = cueFrame(spec.cue);
-  const phases = {
-    lift: [at + eighths(0.5), at + eighths(1.5)] as const,
-    travel: [at + eighths(1.5), at + eighths(3.5)] as const,
-    unload: [at + eighths(3.5), at + eighths(4.5)] as const,
-  };
-  // Follow: Landing is the end of unload; the Trip is drawn half an eighth longer while the sea
-  // drains. No-follow: Landing is once the boat has left and the sea has settled.
-  const landingAt = spec.follow ? phases.unload[1] : at + eighths(4);
+  const span = ([start, end]: Span): Span => [at + eighths(start), at + eighths(end)];
+  const phases = { lift: span(LIFT), travel: span(TRAVEL), unload: span(UNLOAD) };
+  // Follow: Landing is the end of unload, and the Trip is drawn SEA_DRAIN longer while the boat
+  // departs and the sea drains. No-follow: the window stays on the boat, which has sailed off;
+  // Landing is once the sea has settled, SEA_DRAIN into unload, and the Trip ends there.
+  const landingAt = spec.follow ? phases.unload[1] : phases.unload[0] + eighths(SEA_DRAIN);
   return {
     cue: spec.cue,
     at,
@@ -110,7 +124,7 @@ const resolve = (spec: TripSpec, cast: CastWindow[]): ResolvedTrip => {
     phases,
     arrival: positionFrame(...arrival),
     landingAt,
-    end: spec.follow ? at + eighths(5) : landingAt,
+    end: spec.follow ? at + eighths(UNLOAD[1] + SEA_DRAIN) : landingAt,
   };
 };
 
