@@ -1,19 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { copy } from "./copy";
-import { residentCast, tripModel } from "./trip";
+import { p5Trips } from "./scenes/P5";
+import { p6Trips } from "./scenes/P6";
+
+// The models come from the scenes themselves, so a change to a scene's cast or Trips shows here.
+const text = copy.en;
 
 // The P6 no-follow scene: a call and a terminal on Space 1; Enter (frame 2291) sends the terminal
 // to Space 4 while the screen stays on the call.
-const text = copy.en;
-const P6 = tripModel({
-  screen: 1,
-  cast: [
-    ...residentCast(text),
-    { id: "call", kind: "call", title: "Call", space: 1, rect: { x: 90, y: 90, w: 1040, h: 720 } },
-    { id: "terminal", kind: "terminal", title: "Terminal", space: 1, rect: { x: 830, y: 430, w: 1000, h: 560 } },
-  ],
-  trips: [{ cue: "p6.enter", window: "terminal", follow: false }],
-});
+const P6 = p6Trips(text);
 
 const SPACES = [1, 2, 3, 4, 5];
 const P6_FRAMES = Array.from({ length: 2436 - 2280 }, (_, i) => 2280 + i);
@@ -70,6 +65,12 @@ describe("P6 no-follow Trip", () => {
     expect(P6.activeTrip(2355)?.progress).toEqual({ lift: 1, travel: 1, unload: 0 });
   });
 
+  it("rings its Arrival within the unload phase", () => {
+    const { arrival, phases } = P6.activeTrip(2291)!;
+    expect(arrival).toBeGreaterThanOrEqual(phases.unload[0]);
+    expect(arrival).toBeLessThanOrEqual(phases.unload[1]);
+  });
+
   it("never has a window on two Spaces at once", () => {
     for (const frame of P6_FRAMES) {
       const all = SPACES.flatMap((space) => ids(space, frame));
@@ -81,21 +82,7 @@ describe("P6 no-follow Trip", () => {
 // The P5 hotkey montage: three Follow Trips 2 → 3 → 1 → 5 on cues at frames 1745, 1855 and 1964.
 // Docs stays on Space 2; the DM and music windows pop onto their source Space only after the
 // previous Trip.
-const P5 = tripModel({
-  screen: 2,
-  cast: [
-    ...residentCast(text),
-    { id: "docs", kind: "docs", title: "Docs", space: 2, rect: { x: 870, y: 200, w: 1000, h: 700 } },
-    { id: "design", kind: "design", title: "Design", space: 2, rect: { x: 780, y: 230, w: 1000, h: 680 } },
-    { id: "dm", kind: "chat", title: "DM", space: 3, rect: { x: 300, y: 330, w: 900, h: 620 }, appearsAt: 1836 },
-    { id: "music", kind: "music", title: "Music", space: 1, rect: { x: 260, y: 420, w: 820, h: 520 }, appearsAt: 1946 },
-  ],
-  trips: [
-    { cue: "p5.move1", window: "design", follow: true },
-    { cue: "p5.move2", window: "dm", follow: true },
-    { cue: "p5.move3", window: "music", follow: true },
-  ],
-});
+const P5 = p5Trips(text);
 
 const P5_FRAMES = Array.from({ length: 2280 - 1745 }, (_, i) => 1745 + i);
 const p5Ids = (space: number, frame: number) => P5.windowsOn(space, frame).map((w) => w.id);

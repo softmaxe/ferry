@@ -10,7 +10,7 @@ describe.each(["en", "zh"] as const)("P6 scene (%s)", (lang) => {
   const model = p6Trips(text);
   const terminal = text.windows.terminal;
 
-  it.each([2299, 2330])("draws the terminal once on Space 1 until Landing at frame %i", (frame) => {
+  it.each([2299, 2330])("draws the terminal once as the Focused window from before lift until Landing at frame %i", (frame) => {
     const svg = sceneSvg(P6, frame, text);
 
     expect(windowTitles(svg).filter((title) => title === terminal)).toHaveLength(1);
