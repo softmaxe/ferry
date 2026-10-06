@@ -16,6 +16,7 @@ describe.each(["en", "zh"] as const)("P6 scene (%s)", (lang) => {
     expect(windowTitles(svg).filter((title) => title === terminal)).toHaveLength(1);
     expect(windowTitles(svg)).toContain(text.windows.call);
     expect(menuTitles(svg)).toEqual([terminal]);
+    expect(model.focusedWindow(frame)?.title).toBe(terminal);
     expect(menuSpaces(svg)).toEqual([model.screenSpace(frame)]);
     expect(svg).not.toContain(INSET);
   });
@@ -28,7 +29,7 @@ describe.each(["en", "zh"] as const)("P6 scene (%s)", (lang) => {
     expect(insetAt).toBeGreaterThan(0);
     const main = svg.slice(0, insetAt);
     const inset = svg.slice(insetAt);
-    expect(menuTitles(main)).toEqual([model.focusedOn(1, frame)!.title]);
+    expect(menuTitles(main)).toEqual([model.focusedWindow(frame)!.title]);
     expect(menuSpaces(main)).toEqual([1]);
     expect(windowTitles(main)).not.toContain(terminal);
     expect(menuTitles(inset)).toEqual([model.focusedOn(4, frame)!.title]);

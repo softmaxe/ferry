@@ -77,7 +77,7 @@ export const P6 = ({ frame: f, text }: SceneProps) => {
   );
 
   const screen = active ? (
-    <Hop frame={f} plan={active} text={text} clock={CLOCK} guestsOf={(s) => guestsOn(s).filter((w) => w.id !== active.window.id)} />
+    <Hop frame={f} trips={trips} clock={CLOCK} />
   ) : (
     <SpaceView space={shown} frame={f} text={text} clock={CLOCK} guests={guestsOn(shown)} ping={ping} pingSpace={TRIP.to} />
   );

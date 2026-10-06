@@ -1,68 +1,42 @@
 import { bob, ease, keys, lerp } from "../anim";
-import { residents, type WinRect } from "../layouts";
-import type { Copy } from "../copy";
+import type { WinRect } from "../layouts";
 import { C } from "../theme";
 import { eighths } from "../timeline";
+import type { TripModel } from "../trip";
 import { AppWindow } from "./AppWindow";
 import { Boat, onDeck } from "./Boat";
 import { Dock, MenuBar, Wallpaper } from "./Desktop";
-import type { Guest } from "./SpaceView";
 
-// The short ferry trip for a hotkey move, drawn on the 1920×1080 screen: the window boards a
-// boat that rises on a strip of sea, the Spaces slide past (or, without follow, the boat
-// leaves on its own), and the window steps off where it lands.
+// The short ferry trip for a hotkey Trip, drawn on the 1920×1080 screen: the window boards a
+// boat that rises on a strip of sea, the Spaces slide past (or, without Follow, the boat
+// leaves on its own), and the window steps off where it lands. The Trip model says when each
+// phase runs, which Space the screen shows, where every window rests and which is focused;
+// this only draws the boat, the sea and the window on its way between resting rectangles.
 
 const BOAT_SCALE = 0.55;
 const SEA_H = 150;
 
-export type HopPlan = {
-  /** Frame of the key press. */
-  at: number;
-  from: number;
-  to: number;
-  follow: boolean;
-  window: Guest;
-  /** Where the window lands on the destination Space. */
-  landing: WinRect;
-};
-
-/** Timing of one hop, in frames. */
-export const hopPhases = (at: number) => ({
-  lift: [at + eighths(0.5), at + eighths(1.5)] as const,
-  travel: [at + eighths(1.5), at + eighths(3.5)] as const,
-  unload: [at + eighths(3.5), at + eighths(4.5)] as const,
-});
-
-/** Which Space the screen shows at `frame` during a hop. */
-export const hopScreenSpace = (plan: HopPlan, frame: number) => {
-  if (!plan.follow) return plan.from;
-  const { travel } = hopPhases(plan.at);
-  const q = keys(frame, [[travel[0], 0], [travel[1], 1]], ease.inOut);
-  return Math.round(lerp(plan.from, plan.to, q));
-};
-
 type Props = {
   frame: number;
-  plan: HopPlan;
-  text: Copy;
+  /** The scene's Trip model; its active Trip is drawn, or nothing when none is active. */
+  trips: TripModel;
   clock: string;
-  /** Windows other than the travelling one on each Space. */
-  guestsOf: (space: number) => Guest[];
 };
 
-export const Hop = ({ frame: f, plan, text, clock, guestsOf }: Props) => {
-  const { lift, travel, unload } = hopPhases(plan.at);
-  const liftT = keys(f, [[lift[0], 0], [lift[1], 1]], ease.inOut);
-  const travelT = keys(f, [[travel[0], 0], [travel[1], 1]], ease.inOut);
-  const unloadT = plan.follow ? keys(f, [[unload[0], 0], [unload[1], 1]], ease.inOut) : 0;
+export const Hop = ({ frame: f, trips, clock }: Props) => {
+  const plan = trips.activeTrip(f);
+  if (!plan) return null;
+  const { lift, travel, unload } = plan.phases;
+  const { lift: liftT, travel: travelT, unload: unloadT } = plan.progress;
   const rise = plan.follow
     ? keys(f, [[lift[0], 0], [lift[1], 1], [unload[0] + eighths(0.5), 1], [unload[1] + eighths(0.3), 0]], ease.inOut)
     : keys(f, [[lift[0], 0], [lift[1], 1], [travel[1], 1], [unload[0] + eighths(0.5), 0]], ease.inOut);
+  const shown = trips.screenSpace(f);
+  const focused = trips.focusedWindow(f);
 
   const n = Math.abs(plan.to - plan.from);
   const dir = Math.sign(plan.to - plan.from) || 1;
   const q = plan.follow ? travelT * n : 0;
-  const shown = Math.round(lerp(plan.from, plan.to, plan.follow ? travelT : 0));
 
   const waterTop = 1080 - SEA_H * rise;
   const b = bob(f, 6, 60);
@@ -90,37 +64,17 @@ export const Hop = ({ frame: f, plan, text, clock, guestsOf }: Props) => {
     if (Math.abs(x) < 1920) spaces.push({ space: plan.from + dir * j, x });
   }
 
-  const staysOn = (space: number) =>
-    (space === plan.from && f < lift[0]) || (plan.follow && space === plan.to && unloadT >= 1);
-
-  const focusedTitle = win || staysOn(shown) ? plan.window.title : guestsOf(shown).at(-1)?.title ?? residents(shown, text).at(-1)?.title ?? "Finder";
-
   return (
     <g>
-      {spaces.map(({ space, x }) => {
-        const guests = guestsOf(space);
-        return (
-          <g key={space} transform={`translate(${x} 0)`}>
-            <Wallpaper space={space} frame={f} />
-            {residents(space, text).map((w, i) => (
-              <AppWindow key={`r${i}`} {...w} frame={f} focused={false} />
-            ))}
-            {guests.map((g, i) => (
-              <AppWindow key={`g${i}`} kind={g.kind} {...g.rect} title={g.title} lines={g.lines} frame={f} focused={!win && !staysOn(space) && i === guests.length - 1} />
-            ))}
-            {staysOn(space) && (
-              <AppWindow
-                kind={plan.window.kind}
-                {...(space === plan.from ? src : dst)}
-                title={plan.window.title}
-                lines={plan.window.lines}
-                frame={f}
-              />
-            )}
-          </g>
-        );
-      })}
-      <MenuBar app={focusedTitle} clock={clock} space={shown} />
+      {spaces.map(({ space, x }) => (
+        <g key={space} transform={`translate(${x} 0)`}>
+          <Wallpaper space={space} frame={f} />
+          {trips.windowsOn(space, f).map((w) => (
+            <AppWindow key={w.id} kind={w.kind} {...w.rect} title={w.title} lines={w.lines} frame={f} focused={w.id === focused?.id} />
+          ))}
+        </g>
+      ))}
+      <MenuBar app={focused?.title ?? "Finder"} clock={clock} space={shown} />
       <g opacity={1 - Math.min(1, rise * 2)}>
         <Dock />
       </g>

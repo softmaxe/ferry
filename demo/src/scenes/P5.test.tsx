@@ -17,7 +17,7 @@ describe.each(["en", "zh"] as const)("P5 scene (%s)", (lang) => {
     const space = model.screenSpace(frame);
 
     expect(windowTitles(svg).filter((title) => title === text.windows[window])).toHaveLength(1);
-    expect(menuTitles(svg)).toEqual([model.focusedOn(space, frame)!.title]);
+    expect(menuTitles(svg)).toEqual([model.focusedWindow(frame)!.title]);
     expect(menuSpaces(svg)).toEqual([space]);
   });
 
@@ -26,7 +26,7 @@ describe.each(["en", "zh"] as const)("P5 scene (%s)", (lang) => {
     const svg = sceneSvg(P5, frame, text);
 
     expect(windowTitles(svg).filter((title) => title === text.windows.music)).toHaveLength(1);
-    expect(menuTitles(svg)).toEqual([model.activeTrip(frame)!.window.title]);
+    expect(menuTitles(svg)).toEqual([model.focusedWindow(frame)!.title]);
     expect(menuSpaces(svg)).toEqual([model.screenSpace(frame)]);
   });
 
@@ -36,7 +36,7 @@ describe.each(["en", "zh"] as const)("P5 scene (%s)", (lang) => {
     const space = model.screenSpace(frame);
 
     expect(windowTitles(svg)).toEqual(model.windowsOn(space, frame).map((w) => w.title));
-    expect(menuTitles(svg)).toEqual([model.focusedOn(space, frame)!.title]);
+    expect(menuTitles(svg)).toEqual([model.focusedWindow(frame)!.title]);
     expect(menuSpaces(svg)).toEqual([space]);
   });
 });
