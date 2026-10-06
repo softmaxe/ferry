@@ -12,7 +12,7 @@ export type Scene = {
 };
 
 /** One window's ferry ride between Spaces; see GLOSSARY.md (Trip, Arrival). */
-export type Trip = {
+export type TempoTrip = {
   from: number;
   to: number;
   arrival: [bar: number, eighth: number];
@@ -30,7 +30,7 @@ export const timeline = data as unknown as {
    * The Trips, keyed by the cue each one starts on: the source Space, the Destination Space, and
    * the Arrival, where the score rings the Destination Space.
    */
-  trips: Record<string, Trip>;
+  trips: Record<string, TempoTrip>;
 };
 
 export const FPS = timeline.fps;
@@ -61,7 +61,7 @@ export const cueSeconds = (name: string) => positionSeconds(...cue(name));
 export const cueFrame = (name: string) => positionFrame(...cue(name));
 
 /** The Trip starting on cue `name`. */
-export const trip = (name: string): Trip => {
+export const trip = (name: string): TempoTrip => {
   const found = timeline.trips[name];
   if (!found) throw new Error(`no Trip starts on cue: ${name}`);
   return found;

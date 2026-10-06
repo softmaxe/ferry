@@ -4,8 +4,8 @@ import type { ReactNode } from "react";
 import { ease, keys, lerp } from "./anim";
 import type { WindowKind } from "./components/AppWindow";
 import type { Copy } from "./copy";
-import { ARRIVAL, HOME, type WinRect } from "./layouts";
-import { cueFrame, eighths, positionFrame, trip as tempoTrip } from "./timeline";
+import { HOME, LANDING, type WinRect } from "./layouts";
+import { cueFrame, eighths, positionFrame, trip } from "./timeline";
 
 /** One window of a scene's cast, where it rests before any Trip. */
 export type CastWindow = {
@@ -87,7 +87,7 @@ export const residentCast = (text: Copy): CastWindow[] =>
 const place = ({ space: _space, appearsAt: _appearsAt, ...window }: CastWindow): PlacedWindow => window;
 
 const resolve = (spec: TripSpec, cast: CastWindow[]): ResolvedTrip => {
-  const { from, to, arrival } = tempoTrip(spec.cue);
+  const { from, to, arrival } = trip(spec.cue);
   const window = cast.find((w) => w.id === spec.window);
   if (!window) throw new Error(`no cast window ${spec.window} for the Trip on ${spec.cue}`);
   const at = cueFrame(spec.cue);
@@ -106,7 +106,7 @@ const resolve = (spec: TripSpec, cast: CastWindow[]): ResolvedTrip => {
     to,
     follow: spec.follow,
     window: place(window),
-    landing: { ...ARRIVAL[to], w: window.rect.w, h: window.rect.h },
+    landing: { ...LANDING[to], w: window.rect.w, h: window.rect.h },
     phases,
     arrival: positionFrame(...arrival),
     landingAt,

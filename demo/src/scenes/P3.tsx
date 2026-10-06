@@ -7,7 +7,7 @@ import { RaycastPanel } from "../components/Raycast";
 import { Shot } from "../components/Shot";
 import { SpaceView } from "../components/SpaceView";
 import type { Copy } from "../copy";
-import { ARRIVAL, SIZE, type WinRect } from "../layouts";
+import { LANDING, SIZE, type WinRect } from "../layouts";
 import { FRAMES_PER_EIGHTH, cueFrame, eighths, trip } from "../timeline";
 import type { SceneProps } from "./types";
 
@@ -20,8 +20,8 @@ const BOAT_SCALE = 0.34;
 const WIDE: Rect = { x: -100, y: 200, w: 1250, h: 703.125 };
 
 const TRIP = trip("p3.enter");
-const DOCS_BEFORE = { ...ARRIVAL[TRIP.from], ...SIZE.docs };
-const DOCS_AFTER = { ...ARRIVAL[TRIP.to], ...SIZE.docs };
+const DOCS_BEFORE = { ...LANDING[TRIP.from], ...SIZE.docs };
+const DOCS_AFTER = { ...LANDING[TRIP.to], ...SIZE.docs };
 
 const SpaceScreen = ({ space, frame, text, extra }: {
   space: number;

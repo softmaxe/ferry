@@ -5,7 +5,7 @@ import { RaycastSettings, hotkeyLabel } from "../components/Raycast";
 import { Room, SCREEN } from "../components/Room";
 import { Shot } from "../components/Shot";
 import { SpaceView, type Guest } from "../components/SpaceView";
-import { ARRIVAL, SIZE } from "../layouts";
+import { LANDING, SIZE } from "../layouts";
 import { FRAMES_PER_EIGHTH, cueFrame, eighths } from "../timeline";
 import type { SceneProps } from "./types";
 
@@ -28,7 +28,7 @@ export const P4 = ({ frame: f, text }: SceneProps) => {
 
   // A design review pops up on Space 2 just before the montage that sends it away.
   const designPop = cuePop(f, "p4.close", 1, 13);
-  const guests: Guest[] = [{ kind: "docs", title: text.windows.docs, rect: { ...ARRIVAL[2], ...SIZE.docs } }];
+  const guests: Guest[] = [{ kind: "docs", title: text.windows.docs, rect: { ...LANDING[2], ...SIZE.docs } }];
   if (designPop > 0) guests.push({ kind: "design", title: text.windows.design, rect: DESIGN_ON_2 });
 
   const screen = (

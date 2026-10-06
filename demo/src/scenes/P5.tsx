@@ -7,7 +7,7 @@ import { Room, SCREEN } from "../components/Room";
 import { Shot } from "../components/Shot";
 import { SpaceView, guestsOn } from "../components/SpaceView";
 import type { Copy } from "../copy";
-import { ARRIVAL, SIZE } from "../layouts";
+import { LANDING, SIZE } from "../layouts";
 import { FRAMES_PER_EIGHTH, cueFrame, eighths, trip } from "../timeline";
 import { residentCast, tripModel, type TripSpec } from "../trip";
 import { DESIGN_ON_2 } from "./P4";
@@ -31,7 +31,7 @@ export const p5Trips = (text: Copy) =>
     screen: trip("p5.move1").from,
     cast: [
       ...residentCast(text),
-      { id: "docs", kind: "docs", title: text.windows.docs, space: 2, rect: { ...ARRIVAL[2], ...SIZE.docs } },
+      { id: "docs", kind: "docs", title: text.windows.docs, space: 2, rect: { ...LANDING[2], ...SIZE.docs } },
       { id: "design", kind: "design", title: text.windows.design, space: 2, rect: DESIGN_ON_2 },
       { id: "dm", kind: "chat", title: text.windows.dm, space: 3, rect: { x: 300, y: 330, ...SIZE.chat }, appearsAt: cueFrame("p5.move1") + eighths(5) },
       { id: "music", kind: "music", title: text.windows.music, space: 1, rect: { x: 260, y: 420, ...SIZE.music }, appearsAt: cueFrame("p5.move2") + eighths(5) },

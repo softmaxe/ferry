@@ -7,9 +7,9 @@ import { AppWindow } from "./AppWindow";
 import { Boat, onDeck } from "./Boat";
 import { Dock, MenuBar, Wallpaper } from "./Desktop";
 
-// The short ferry trip for a hotkey Trip, drawn on the 1920×1080 screen: the window boards a
-// boat that rises on a strip of sea, the Spaces slide past (or, without Follow, the boat
-// leaves on its own), and the window steps off where it lands. The Trip model says when each
+// A hotkey Trip, drawn on the 1920×1080 screen: the window boards a boat that rises on a strip
+// of sea, the Spaces slide past (or, without Follow, the boat leaves on its own), and the window
+// steps off at its Landing. The Trip model says when each
 // phase runs, which Space the screen shows, where every window rests and which is focused;
 // this only draws the boat, the sea and the window on its way between resting rectangles.
 
