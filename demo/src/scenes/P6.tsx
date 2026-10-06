@@ -61,7 +61,8 @@ export const P6 = ({ frame: f, text }: SceneProps) => {
   const typed = COMMAND.slice(0, Math.max(0, Math.min(COMMAND.length, Math.floor(((f - typeStart) / (eighths(5.5))) * COMMAND.length))));
   const enterAt = cueFrame("p6.enter");
 
-  const trips = p6Trips(text, terminalLines(typed, false, f < enterAt));
+  // ferry's report shows once the inset reveals the terminal on the Destination Space.
+  const trips = p6Trips(text, terminalLines(typed, f >= cueFrame("p6.inset"), f < enterAt));
   const active = trips.activeTrip(f);
   const shown = trips.screenSpace(f);
 
@@ -70,7 +71,7 @@ export const P6 = ({ frame: f, text }: SceneProps) => {
   const insetScreen = (
     <Desktop space={TRIP.to} frame={f} app={trips.focusedOn(TRIP.to, f)?.title ?? "Finder"} clock={CLOCK}>
       {guestsOn(trips, TRIP.to, f).map((w) => (
-        <AppWindow key={w.id} kind={w.kind} {...w.rect} title={w.title} lines={w.id === "terminal" ? terminalLines(COMMAND, true, false) : w.lines} frame={f} />
+        <AppWindow key={w.id} kind={w.kind} {...w.rect} title={w.title} lines={w.lines} frame={f} />
       ))}
     </Desktop>
   );
