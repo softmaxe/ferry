@@ -4,7 +4,7 @@ import { AppWindow } from "../components/AppWindow";
 import { Hop } from "../components/Hop";
 import { Caption, ClockChip, Keycaps } from "../components/Overlays";
 import { Shot } from "../components/Shot";
-import { SpaceView } from "../components/SpaceView";
+import { SpaceView, guestsOn } from "../components/SpaceView";
 import { Desktop } from "../components/Desktop";
 import type { Copy } from "../copy";
 import { SIZE } from "../layouts";
@@ -62,7 +62,6 @@ export const P6 = ({ frame: f, text }: SceneProps) => {
   const enterAt = cueFrame("p6.enter");
 
   const trips = p6Trips(text, terminalLines(typed, false, f < enterAt));
-  const guestsOn = (space: number) => trips.windowsOn(space, f).filter((w) => !w.resident);
   const active = trips.activeTrip(f);
   const shown = trips.screenSpace(f);
 
@@ -70,7 +69,7 @@ export const P6 = ({ frame: f, text }: SceneProps) => {
   const inset = cuePop(f, "p6.inset", 0, 14);
   const insetScreen = (
     <Desktop space={TRIP.to} frame={f} app={trips.focusedOn(TRIP.to, f)?.title ?? "Finder"} clock={CLOCK}>
-      {guestsOn(TRIP.to).map((w) => (
+      {guestsOn(trips, TRIP.to, f).map((w) => (
         <AppWindow key={w.id} kind={w.kind} {...w.rect} title={w.title} lines={w.id === "terminal" ? terminalLines(COMMAND, true, false) : w.lines} frame={f} />
       ))}
     </Desktop>
@@ -79,7 +78,7 @@ export const P6 = ({ frame: f, text }: SceneProps) => {
   const screen = active ? (
     <Hop frame={f} trips={trips} clock={CLOCK} />
   ) : (
-    <SpaceView space={shown} frame={f} text={text} clock={CLOCK} guests={guestsOn(shown)} ping={ping} pingSpace={TRIP.to} />
+    <SpaceView space={shown} frame={f} text={text} clock={CLOCK} guests={guestsOn(trips, shown, f)} ping={ping} pingSpace={TRIP.to} />
   );
 
   const reveal = cueProgress(f, "p6.reveal", 2, ease.out);
