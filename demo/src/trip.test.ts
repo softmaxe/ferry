@@ -48,6 +48,15 @@ describe("P6 no-follow Trip", () => {
     expect(P6.focusedOn(4, 2364)?.id).toBe("terminal");
   });
 
+  it.each([
+    { frame: 2299, window: "terminal" },
+    { frame: 2300, window: "terminal" },
+    { frame: 2363, window: "terminal" },
+    { frame: 2364, window: "call" },
+  ])("has $window as the Focused window at frame $frame", ({ frame, window }) => {
+    expect(P6.focusedWindow(frame)?.id).toBe(window);
+  });
+
   it("is the active Trip from Enter until Landing", () => {
     expect(P6.activeTrip(2290)).toBeUndefined();
     expect(P6.activeTrip(2291)).toMatchObject({ cue: "p6.enter", from: 1, to: 4, follow: false, window: { id: "terminal" } });
@@ -143,6 +152,10 @@ describe.each([
     expect(P5.activeTrip(at)).toMatchObject({ cue, from, to, follow: true, window: { id: window }, landingAt });
     expect(P5.activeTrip(end - 1)?.cue).toBe(cue);
     expect(P5.activeTrip(end)).toBeUndefined();
+  });
+
+  it("keeps the window as the Focused window for the whole Trip", () => {
+    for (const frame of [at, lift, landingAt - 1, end - 1]) expect(P5.focusedWindow(frame)?.id, `frame ${frame}`).toBe(window);
   });
 
   it("rings its Arrival within the unload phase", () => {

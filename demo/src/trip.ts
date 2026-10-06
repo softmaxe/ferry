@@ -63,6 +63,12 @@ export type TripModel = {
   windowsOn: (space: number, frame: number) => PlacedWindow[];
   /** The Focused window on `space` at `frame`, if the Space has any window. */
   focusedOn: (space: number, frame: number) => PlacedWindow | undefined;
+  /**
+   * The Focused window at `frame`, the one the menu bar names. While a Trip is drawn it is the
+   * carried window, which keeps keyboard focus on the boat although it is on no Space; otherwise
+   * it is the Focused window on the Space the screen shows.
+   */
+  focusedWindow: (frame: number) => PlacedWindow | undefined;
 };
 
 /** Every Space's resident windows from the layout tables, as cast entries. */
@@ -143,5 +149,13 @@ export const tripModel = ({ screen, cast, trips }: { screen: number; cast: CastW
       .sort((a, b) => (a.at!.since < b.at!.since ? -1 : a.at!.since > b.at!.since ? 1 : 0))
       .map(({ window, at }) => ({ ...place(window), rect: at!.rect }));
 
-  return { activeTrip, screenSpace, windowsOn, focusedOn: (space, frame) => windowsOn(space, frame).at(-1) };
+  const focusedOn = (space: number, frame: number) => windowsOn(space, frame).at(-1);
+
+  return {
+    activeTrip,
+    screenSpace,
+    windowsOn,
+    focusedOn,
+    focusedWindow: (frame) => activeTrip(frame)?.window ?? focusedOn(screenSpace(frame), frame),
+  };
 };
