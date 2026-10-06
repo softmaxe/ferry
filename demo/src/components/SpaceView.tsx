@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { Copy } from "../copy";
 import { residents, type WinRect } from "../layouts";
+import type { TripModel } from "../trip";
 import { AppWindow, type WindowKind } from "./AppWindow";
 import { Desktop } from "./Desktop";
 
@@ -10,6 +11,10 @@ export type Guest = {
   rect: WinRect;
   lines?: ReactNode;
 };
+
+/** The Trip model's windows on `space` at `frame` that SpaceView takes as guests: all but residents. */
+export const guestsOn = (trips: TripModel, space: number, frame: number) =>
+  trips.windowsOn(space, frame).filter((w) => !w.resident);
 
 /** A Space with its resident windows plus any guests; the last guest has focus. */
 export const SpaceView = ({ space, frame, text, clock, guests = [], overlay, menuSpace, ping, pingSpace }: {

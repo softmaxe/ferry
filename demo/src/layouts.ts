@@ -26,8 +26,8 @@ export const SIZE: Record<"docs" | "chat" | "design" | "music" | "terminal" | "c
   call: { w: 1040, h: 720 },
 };
 
-/** Where a window that ferry brings to a Space lands. */
-export const ARRIVAL: Record<number, { x: number; y: number }> = {
+/** Where a window that ferry brings to a Space rests from its Landing. */
+export const LANDING: Record<number, { x: number; y: number }> = {
   1: { x: 760, y: 170 },
   2: { x: 870, y: 200 },
   3: { x: 800, y: 260 },

@@ -2,11 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   TOTAL_FRAMES,
   cueFrame,
-  move,
   positionFrame,
   sceneAt,
   scenes,
   timeline,
+  trip,
 } from "./timeline";
 
 describe("tempo map", () => {
@@ -55,17 +55,26 @@ describe("cues", () => {
   });
 });
 
-describe("moves", () => {
+describe("trips", () => {
   it("start on a cue and go between two different Spaces", () => {
-    for (const [name, [from, to]] of Object.entries(timeline.moves)) {
+    for (const [name, { from, to }] of Object.entries(timeline.trips)) {
       expect(timeline.cues[name], name).toBeDefined();
       for (const space of [from, to]) expect(space, name).toBeOneOf([1, 2, 3, 4, 5]);
       expect(from, name).not.toBe(to);
     }
   });
 
-  it("resolve by cue and reject cues that move nothing", () => {
-    expect(move("p5.move2")).toEqual({ from: 3, to: 1 });
-    expect(() => move("p3.type")).toThrow(/no move/);
+  it("arrive after they start, within the same scene", () => {
+    for (const [name, { arrival }] of Object.entries(timeline.trips)) {
+      const scene = sceneAt(cueFrame(name));
+      expect(positionFrame(...arrival), name).toBeGreaterThan(cueFrame(name));
+      expect(sceneAt(positionFrame(...arrival)), name).toBe(scene);
+    }
+  });
+
+  it("resolve by cue and reject cues that start no Trip", () => {
+    expect(trip("p5.move2")).toEqual({ from: 3, to: 1, arrival: [18, 4] });
+    expect(trip("p3.enter")).toEqual({ from: 1, to: 2, arrival: [12, 1] });
+    expect(() => trip("p3.type")).toThrow(/no Trip/);
   });
 });

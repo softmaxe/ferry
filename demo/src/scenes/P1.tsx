@@ -8,14 +8,14 @@ import { Room, SCREEN } from "../components/Room";
 import { Shot } from "../components/Shot";
 import { C, FONT } from "../theme";
 import { cueFrame, eighths } from "../timeline";
-import { ARRIVAL, HOME, SIZE } from "../layouts";
+import { HOME, LANDING, SIZE } from "../layouts";
 import type { SceneProps } from "./types";
 
 // Cold open: the docs window opened on the chat Space; dragging it in Mission Control goes wrong.
 
 const CLOSE = { x: 360, y: 210, w: 1200, h: 675 };
 const CHAT = HOME[1][0];
-const DOCS = { ...ARRIVAL[1], ...SIZE.docs };
+const DOCS = { ...LANDING[1], ...SIZE.docs };
 
 export const P1 = ({ frame: f, text }: SceneProps) => {
   const zoomIn = cueProgress(f, "p1.zoomIn", 3, ease.inOut);

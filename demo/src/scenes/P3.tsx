@@ -1,14 +1,14 @@
 import { FULL, bob, cuePop, cueProgress, ease, keys, lerp, viewportBetween, type Rect } from "../anim";
 import { AppWindow } from "../components/AppWindow";
-import { Boat, DECK, Wake } from "../components/Boat";
+import { Boat, Wake, onDeck } from "../components/Boat";
 import { Harbor, WATER, cardRect, onCard, pierX } from "../components/Harbor";
 import { Caption, Keycaps } from "../components/Overlays";
 import { RaycastPanel } from "../components/Raycast";
 import { Shot } from "../components/Shot";
 import { SpaceView } from "../components/SpaceView";
 import type { Copy } from "../copy";
-import { ARRIVAL, SIZE, type WinRect } from "../layouts";
-import { FRAMES_PER_EIGHTH, cueFrame, eighths, move } from "../timeline";
+import { LANDING, SIZE, type WinRect } from "../layouts";
+import { FRAMES_PER_EIGHTH, cueFrame, eighths, trip } from "../timeline";
 import type { SceneProps } from "./types";
 
 // Raycast runs "Ferry Window to Space 2"; the harbor shows the docs window crossing to Space 2.
@@ -19,18 +19,9 @@ const BOAT_SCALE = 0.34;
 // Frames piers 1–3 so the crossing reads large; the other Spaces peek in from the right.
 const WIDE: Rect = { x: -100, y: 200, w: 1250, h: 703.125 };
 
-const TRIP = move("p3.enter");
-const DOCS_BEFORE = { ...ARRIVAL[TRIP.from], ...SIZE.docs };
-const DOCS_AFTER = { ...ARRIVAL[TRIP.to], ...SIZE.docs };
-
-/** The world rectangle of a window riding on the deck of a boat at (x, y). */
-export const onDeck = (x: number, y: number, scale: number, size: { w: number; h: number }) => {
-  const w = 0.62 * 880 * scale;
-  const h = (w * size.h) / size.w;
-  const cx = x + ((DECK.left + DECK.right) / 2) * scale;
-  const bottom = y + DECK.y * scale + 6;
-  return { x: cx - w / 2, y: bottom - h, w, h, k: w / size.w };
-};
+const TRIP = trip("p3.enter");
+const DOCS_BEFORE = { ...LANDING[TRIP.from], ...SIZE.docs };
+const DOCS_AFTER = { ...LANDING[TRIP.to], ...SIZE.docs };
 
 const SpaceScreen = ({ space, frame, text, extra }: {
   space: number;
