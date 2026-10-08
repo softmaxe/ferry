@@ -27,7 +27,18 @@ jobs:
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          # Full history so the tagged commit can be checked against main.
+          fetch-depth: 0
           persist-credentials: false
+
+      - name: Verify tag is on main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main || {
+            echo "Tag $GITHUB_REF_NAME points to $GITHUB_SHA, which is not on main" >&2
+            exit 1
+          }
 
       - name: Read version and validate release tag
         id: version
@@ -243,6 +254,8 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: read
+    # The environment only admits v*.*.* tags, which scopes the tap token to releases.
+    environment: homebrew-tap
     concurrency:
       group: homebrew-tap-ferry
       cancel-in-progress: false
