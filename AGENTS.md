@@ -18,6 +18,10 @@ Issues are tracked in GitHub Issues for `softmaxe/ferry`, via the `gh` CLI. See 
 
 The five default triage labels, each label string matching its role name. See `docs/agents/triage-labels.md`.
 
+### Merging and releasing
+
+Merging a pull request or publishing a release follows `docs/agents/merge-and-release.md`.
+
 ### Domain docs
 
 Single-context: one `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
