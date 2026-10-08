@@ -3,7 +3,7 @@ import { C, FONT, SPACE_COLORS } from "../theme";
 
 // A stylized macOS screen in 1920×1080 coordinates.
 
-export const MENU_H = 44;
+const MENU_H = 44;
 
 export const Wallpaper = ({ space, frame }: { space: number; frame: number }) => {
   const { wall, deep } = SPACE_COLORS[space];
@@ -19,7 +19,7 @@ export const Wallpaper = ({ space, frame }: { space: number; frame: number }) =>
 };
 
 /** Five dots, one per Space; `current` is filled, `ping` pulses a Space that just received a window. */
-export const SpaceDots = ({ x, y, current, ping = 0, pingSpace }: { x: number; y: number; current: number; ping?: number; pingSpace?: number }) => (
+const SpaceDots = ({ x, y, current, ping = 0, pingSpace }: { x: number; y: number; current: number; ping?: number; pingSpace?: number }) => (
   <g>
     {[1, 2, 3, 4, 5].map((s) => {
       const cx = x + (s - 1) * 22;

@@ -1,8 +1,8 @@
 import { C, FONT, SPACE_COLORS } from "../theme";
 import { Wallpaper } from "./Desktop";
 
-export const THUMB = { w: 240, h: 135, y: 56, gap: 40 };
-export const thumbX = (space: number) => 960 - (5 * THUMB.w + 4 * THUMB.gap) / 2 + (space - 1) * (THUMB.w + THUMB.gap);
+const THUMB = { w: 240, h: 135, y: 56, gap: 40 };
+const thumbX = (space: number) => 960 - (5 * THUMB.w + 4 * THUMB.gap) / 2 + (space - 1) * (THUMB.w + THUMB.gap);
 export const thumbCenter = (space: number) => ({ x: thumbX(space) + THUMB.w / 2, y: THUMB.y + THUMB.h / 2 });
 
 /** The Space strip across the top of Mission Control. `show` slides it in. */

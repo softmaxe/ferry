@@ -3,7 +3,7 @@ import { C } from "../theme";
 import type { Rect } from "../anim";
 import { Boat } from "./Boat";
 
-export type RoomKind = "cafe" | "office" | "dusk" | "sunset";
+type RoomKind = "cafe" | "office" | "dusk" | "sunset";
 
 /** Where the laptop's display sits in room coordinates; the camera zooms to exactly this. */
 export const SCREEN: Rect = { x: 880, y: 362, w: 576, h: 324 };

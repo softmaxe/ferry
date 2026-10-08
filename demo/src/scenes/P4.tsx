@@ -11,7 +11,7 @@ import type { SceneProps } from "./types";
 
 // Afternoon at the office: each Ferry command gets a hotkey in Raycast's settings.
 
-export const P4_CLOCK = "14:00";
+const P4_CLOCK = "14:00";
 export const DESIGN_ON_2 = { x: 780, y: 230, ...SIZE.design };
 
 export const P4 = ({ frame: f, text }: SceneProps) => {

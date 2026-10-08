@@ -4,7 +4,7 @@ import { C, FONT, SPACE_COLORS } from "../theme";
 
 // The harbor: every Space is a signboard standing on its own pier. ferry's boat runs between piers.
 
-export const CARD = { w: 320, h: 180, y: 290, spacing: 370 };
+const CARD = { w: 320, h: 180, y: 290, spacing: 370 };
 /** Where the sea starts behind the piers. */
 export const HORIZON = 500;
 /** The waterline boats float at; anything drawn below it in front is underwater. */
