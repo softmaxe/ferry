@@ -9,6 +9,7 @@ import { SpaceView } from "../components/SpaceView";
 import type { Copy } from "../copy";
 import { LANDING, SIZE, type WinRect } from "../layouts";
 import { FRAMES_PER_EIGHTH, cueFrame, eighths, trip } from "../timeline";
+import { residentCast } from "../trip";
 import type { SceneProps } from "./types";
 
 // Raycast runs "Ferry Window to Space 2"; the harbor shows the docs window crossing to Space 2.
@@ -32,9 +33,11 @@ const SpaceScreen = ({ space, frame, text, extra }: {
   <SpaceView
     space={space}
     frame={frame}
-    text={text}
     clock={CLOCK}
-    guests={extra ? [{ kind: extra.kind, title: text.windows[extra.kind], rect: extra.rect }] : []}
+    windows={[
+      ...residentCast(text).filter((w) => w.space === space),
+      ...(extra ? [{ id: extra.kind, kind: extra.kind, title: text.windows[extra.kind], rect: extra.rect }] : []),
+    ]}
   />
 );
 

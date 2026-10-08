@@ -3,7 +3,7 @@ import { C } from "../theme";
 
 // A seated, gender-neutral figure in profile facing right. (0, 0) is the middle of the seat.
 
-export type Mouth = "neutral" | "smile" | "grin" | "sigh" | "o";
+type Mouth = "neutral" | "smile" | "grin" | "sigh" | "o";
 
 type Point = { x: number; y: number };
 

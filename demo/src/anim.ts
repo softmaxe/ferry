@@ -8,7 +8,7 @@ export const ease = {
   soft: Easing.bezier(0.45, 0, 0.25, 1),
 };
 
-export const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
+const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 export const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
 /** 0 → 1 over `duration` frames starting at `start`, eased. */
@@ -47,12 +47,6 @@ export const viewportBetween = (from: Rect, to: Rect, t: number): Rect => {
   const w = from.w * Math.pow(to.w / from.w, t);
   const k = from.w === to.w ? t : (from.w - w) / (from.w - to.w);
   return { x: lerp(from.x, to.x, k), y: lerp(from.y, to.y, k), w, h: (w * 9) / 16 };
-};
-
-/** SVG transform that shows viewport `v` across the full 1920×1080 frame. */
-export const cameraTransform = (v: Rect) => {
-  const s = 1920 / v.w;
-  return `scale(${s}) translate(${-v.x} ${-v.y})`;
 };
 
 /** Gentle bobbing on water, in pixels and degrees. */

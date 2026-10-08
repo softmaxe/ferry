@@ -1,5 +1,11 @@
 import type { ReactNode } from "react";
-import { cameraTransform, type Rect } from "../anim";
+import type { Rect } from "../anim";
+
+/** SVG transform that shows viewport `v` across the full 1920×1080 frame. */
+const cameraTransform = (v: Rect) => {
+  const s = 1920 / v.w;
+  return `scale(${s}) translate(${-v.x} ${-v.y})`;
+};
 
 /** A 1920×1080 frame showing `view` of the world drawn in `children`, plus unscaled overlays. */
 export const Shot = ({ view, children, overlay }: { view: Rect; children: ReactNode; overlay?: ReactNode }) => (

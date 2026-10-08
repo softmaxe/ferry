@@ -4,7 +4,7 @@ import { C } from "../theme";
 // Geometry traced from docs/assets/ferry-logo.png (1254 px canvas), re-origined so (0, 0) is
 // the middle of the keel. The deck runs from x = -350 to 255 at y = -215.
 
-export const DECK = { left: -350, right: 255, y: -215 };
+const DECK = { left: -350, right: 255, y: -215 };
 
 /**
  * The world rectangle of a window riding on the deck of a boat whose keel is at (x, y), drawn
