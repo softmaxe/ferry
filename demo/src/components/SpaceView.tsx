@@ -1,43 +1,19 @@
-import type { ReactNode } from "react";
-import type { Copy } from "../copy";
-import { residents, type WinRect } from "../layouts";
-import type { TripModel } from "../trip";
-import { AppWindow, type WindowKind } from "./AppWindow";
+import type { PlacedWindow } from "../trip";
+import { AppWindow } from "./AppWindow";
 import { Desktop } from "./Desktop";
 
-export type Guest = {
-  kind: WindowKind;
-  title: string;
-  rect: WinRect;
-  lines?: ReactNode;
-};
-
-/** The Trip model's windows on `space` at `frame` that SpaceView takes as guests: all but residents. */
-export const guestsOn = (trips: TripModel, space: number, frame: number) =>
-  trips.windowsOn(space, frame).filter((w) => !w.resident);
-
-/** A Space with its resident windows plus any guests; the last guest has focus. */
-export const SpaceView = ({ space, frame, text, clock, guests = [], overlay, menuSpace, ping, pingSpace }: {
+/** A Space with `windows` in draw order; the last is the Focused window the menu bar names. */
+export const SpaceView = ({ space, frame, clock, windows, ping, pingSpace }: {
   space: number;
   frame: number;
-  text: Copy;
   clock: string;
-  guests?: Guest[];
-  overlay?: ReactNode;
-  menuSpace?: number;
+  windows: PlacedWindow[];
   ping?: number;
   pingSpace?: number;
-}) => {
-  const wins = residents(space, text);
-  const focused = guests.length ? guests[guests.length - 1].title : wins[wins.length - 1]?.title ?? "Finder";
-  return (
-    <Desktop space={space} frame={frame} app={focused} clock={clock} overlay={overlay} menuSpace={menuSpace} ping={ping} pingSpace={pingSpace}>
-      {wins.map((w, i) => (
-        <AppWindow key={`r${i}`} {...w} frame={frame} focused={!guests.length && i === wins.length - 1} />
-      ))}
-      {guests.map((g, i) => (
-        <AppWindow key={`g${i}`} kind={g.kind} {...g.rect} title={g.title} lines={g.lines} frame={frame} focused={i === guests.length - 1} />
-      ))}
-    </Desktop>
-  );
-};
+}) => (
+  <Desktop space={space} frame={frame} app={windows.at(-1)?.title ?? "Finder"} clock={clock} ping={ping} pingSpace={pingSpace}>
+    {windows.map((w, i) => (
+      <AppWindow key={w.id} kind={w.kind} {...w.rect} title={w.title} lines={w.lines} frame={frame} focused={i === windows.length - 1} />
+    ))}
+  </Desktop>
+);

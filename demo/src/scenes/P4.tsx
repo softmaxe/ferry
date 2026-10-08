@@ -4,9 +4,10 @@ import { Caption, ClockChip, Keycaps } from "../components/Overlays";
 import { RaycastSettings, hotkeyLabel } from "../components/Raycast";
 import { Room, SCREEN } from "../components/Room";
 import { Shot } from "../components/Shot";
-import { SpaceView, type Guest } from "../components/SpaceView";
+import { SpaceView } from "../components/SpaceView";
 import { LANDING, SIZE } from "../layouts";
 import { FRAMES_PER_EIGHTH, cueFrame, eighths } from "../timeline";
+import { residentCast, type PlacedWindow } from "../trip";
 import type { SceneProps } from "./types";
 
 // Afternoon at the office: each Ferry command gets a hotkey in Raycast's settings.
@@ -28,12 +29,15 @@ export const P4 = ({ frame: f, text }: SceneProps) => {
 
   // A design review pops up on Space 2 just before the montage that sends it away.
   const designPop = cuePop(f, "p4.close", 1, 13);
-  const guests: Guest[] = [{ kind: "docs", title: text.windows.docs, rect: { ...LANDING[2], ...SIZE.docs } }];
-  if (designPop > 0) guests.push({ kind: "design", title: text.windows.design, rect: DESIGN_ON_2 });
+  const windows: PlacedWindow[] = [
+    ...residentCast(text).filter((w) => w.space === 2),
+    { id: "docs", kind: "docs", title: text.windows.docs, rect: { ...LANDING[2], ...SIZE.docs } },
+  ];
+  if (designPop > 0) windows.push({ id: "design", kind: "design", title: text.windows.design, rect: DESIGN_ON_2 });
 
   const screen = (
     <g>
-      <SpaceView space={2} frame={f} text={text} clock={P4_CLOCK} guests={guests} />
+      <SpaceView space={2} frame={f} clock={P4_CLOCK} windows={windows} />
       <RaycastSettings open={open} recorded={recorded} recording={recording} />
     </g>
   );

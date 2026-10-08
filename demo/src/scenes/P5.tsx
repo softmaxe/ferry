@@ -5,7 +5,7 @@ import { Caption, ClockChip, Keycaps } from "../components/Overlays";
 import { hotkeyLabel } from "../components/Raycast";
 import { Room, SCREEN } from "../components/Room";
 import { Shot } from "../components/Shot";
-import { SpaceView, guestsOn } from "../components/SpaceView";
+import { SpaceView } from "../components/SpaceView";
 import type { Copy } from "../copy";
 import { LANDING, SIZE } from "../layouts";
 import { FRAMES_PER_EIGHTH, cueFrame, eighths, trip } from "../timeline";
@@ -50,7 +50,7 @@ export const P5 = ({ frame: f, text }: SceneProps) => {
   const screen = active ? (
     <Hop frame={f} trips={trips} clock={CLOCK} />
   ) : (
-    <SpaceView space={shown} frame={f} text={text} clock={CLOCK} guests={guestsOn(trips, shown, f)} />
+    <SpaceView space={shown} frame={f} clock={CLOCK} windows={trips.windowsOn(shown, f)} />
   );
 
   // The keycaps show from half an eighth before each keystroke until the window has lifted: the

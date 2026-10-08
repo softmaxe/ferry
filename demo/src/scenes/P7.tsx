@@ -5,6 +5,7 @@ import { ClockChip } from "../components/Overlays";
 import { Room } from "../components/Room";
 import { Shot } from "../components/Shot";
 import { SpaceView } from "../components/SpaceView";
+import { residentCast } from "../trip";
 import { C, FONT } from "../theme";
 import { Sea } from "./P2";
 import type { SceneProps } from "./types";
@@ -23,7 +24,7 @@ export const P7 = ({ frame: f, text }: SceneProps) => {
 
   const room = (
     <Shot view={viewportBetween(FULL, WINDOW_VIEW, pan)} overlay={<ClockChip time={CLOCK} show={1 - pan} />}>
-      <Room kind="sunset" frame={f} lid={lid} sail={cueProgress(f, "p7.home", 12, ease.soft)} screen={<SpaceView space={1} frame={f} text={text} clock={CLOCK} />}>
+      <Room kind="sunset" frame={f} lid={lid} sail={cueProgress(f, "p7.home", 12, ease.soft)} screen={<SpaceView space={1} frame={f} clock={CLOCK} windows={residentCast(text).filter((w) => w.space === 1)} />}>
         <Character
           x={700}
           y={800}

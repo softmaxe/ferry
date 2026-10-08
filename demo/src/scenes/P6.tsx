@@ -1,11 +1,9 @@
 import type { ReactNode } from "react";
 import { FULL, cuePop, cueProgress, ease } from "../anim";
-import { AppWindow } from "../components/AppWindow";
 import { Hop } from "../components/Hop";
 import { Caption, ClockChip, Keycaps } from "../components/Overlays";
 import { Shot } from "../components/Shot";
-import { SpaceView, guestsOn } from "../components/SpaceView";
-import { Desktop } from "../components/Desktop";
+import { SpaceView } from "../components/SpaceView";
 import type { Copy } from "../copy";
 import { SIZE } from "../layouts";
 import { C, FONT } from "../theme";
@@ -68,18 +66,12 @@ export const P6 = ({ frame: f, text }: SceneProps) => {
 
   const ping = cueProgress(f, "p6.inset", 3, ease.out);
   const inset = cuePop(f, "p6.inset", 0, 14);
-  const insetScreen = (
-    <Desktop space={TRIP.to} frame={f} app={trips.focusedOn(TRIP.to, f)?.title ?? "Finder"} clock={CLOCK}>
-      {guestsOn(trips, TRIP.to, f).map((w) => (
-        <AppWindow key={w.id} kind={w.kind} {...w.rect} title={w.title} lines={w.lines} frame={f} />
-      ))}
-    </Desktop>
-  );
+  const insetScreen = <SpaceView space={TRIP.to} frame={f} clock={CLOCK} windows={trips.windowsOn(TRIP.to, f)} />;
 
   const screen = active ? (
     <Hop frame={f} trips={trips} clock={CLOCK} />
   ) : (
-    <SpaceView space={shown} frame={f} text={text} clock={CLOCK} guests={guestsOn(trips, shown, f)} ping={ping} pingSpace={TRIP.to} />
+    <SpaceView space={shown} frame={f} clock={CLOCK} windows={trips.windowsOn(shown, f)} ping={ping} pingSpace={TRIP.to} />
   );
 
   const reveal = cueProgress(f, "p6.reveal", 2, ease.out);
