@@ -1,0 +1,6 @@
+node_modules/
+out/
+music/.venv/
+music/build/
+public/music.wav
+__pycache__/

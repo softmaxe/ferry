@@ -1,0 +1,322 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  TARGET: aarch64-apple-darwin
+  EXPECTED_ARCH: arm64
+  MINIMUM_MACOS: "26.0"
+
+jobs:
+  build:
+    name: Build aarch64-apple-darwin
+    runs-on: macos-26
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Full history so the tagged commit can be checked against main.
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify tag is on main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main || {
+            echo "Tag $GITHUB_REF_NAME points to $GITHUB_SHA, which is not on main" >&2
+            exit 1
+          }
+
+      - name: Read version and validate release tag
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(sed -n 's/^VERSION = \(.*\)$/\1/p' Makefile | head -n 1)"
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Makefile version must match MAJOR.MINOR.PATCH: $version" >&2
+            exit 1
+          fi
+          if [[ "$GITHUB_REF_NAME" != "v$version" ]]; then
+            echo "Makefile version $version does not match tag $GITHUB_REF_NAME" >&2
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Show toolchain
+        shell: bash
+        run: |
+          sw_vers
+          clang --version
+          xcrun --show-sdk-version
+
+      - name: Build and test
+        run: make all test
+
+      - name: Verify and package binary
+        shell: bash
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          binary="build/ferry"
+          test -x "$binary"
+
+          binary_archs="$(lipo -archs "$binary")"
+          test "$binary_archs" = "$EXPECTED_ARCH" || {
+            echo "Expected $EXPECTED_ARCH binary, got $binary_archs" >&2
+            exit 1
+          }
+
+          minos="$(otool -l "$binary" | awk '$1 == "minos" { print $2; exit }')"
+          test "$minos" = "$MINIMUM_MACOS" || {
+            echo "Expected minimum macOS $MINIMUM_MACOS, got $minos" >&2
+            exit 1
+          }
+
+          otool -L "$binary" | grep -q "/AppKit.framework/" || {
+            echo "The binary must link AppKit" >&2
+            exit 1
+          }
+
+          test "$("$binary" --version)" = "ferry $VERSION"
+
+          package_dir="$RUNNER_TEMP/package-$TARGET"
+          dist_dir="$RUNNER_TEMP/dist-$TARGET"
+          mkdir -p "$package_dir" "$dist_dir"
+          install -m 0755 "$binary" "$package_dir/ferry"
+          install -m 0644 LICENSE "$package_dir/LICENSE"
+
+          archive="ferry-v$VERSION-$TARGET.tar.gz"
+          COPYFILE_DISABLE=1 tar -czf "$dist_dir/$archive" -C "$package_dir" ferry LICENSE
+          (
+            cd "$dist_dir"
+            shasum -a 256 "$archive" > "$archive.sha256"
+          )
+
+      - name: Upload release files
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release-${{ env.TARGET }}
+          path: ${{ runner.temp }}/dist-${{ env.TARGET }}/*
+          if-no-files-found: error
+          retention-days: 30
+
+  release:
+    name: Publish GitHub Release
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - name: Download release files
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: release-*
+          path: dist
+          merge-multiple: true
+
+      - name: Attest release archives
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: dist/*.tar.gz
+
+      - name: Create draft and publish release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          if is_draft="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft 2>/dev/null)"; then
+            test "$is_draft" = "true" || {
+              echo "Release $TAG is already published and will not be overwritten" >&2
+              exit 1
+            }
+          else
+            gh release create "$TAG" \
+              --repo "$GITHUB_REPOSITORY" \
+              --draft \
+              --generate-notes \
+              --title "$TAG"
+          fi
+
+          gh release upload "$TAG" dist/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --clobber
+
+          gh release edit "$TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --draft=false \
+            --latest
+
+      - name: Generate Homebrew formula
+        shell: bash
+        env:
+          TAG: ${{ github.ref_name }}
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          set -euo pipefail
+          arm_archive="ferry-v$VERSION-$TARGET.tar.gz"
+          arm_sha="$(awk '{ print $1 }' "dist/$arm_archive.sha256")"
+
+          mkdir -p formula
+          cat > formula/ferry.rb <<EOF
+          class Ferry < Formula
+            desc "Move the focused macOS window to another Space"
+            homepage "https://github.com/softmaxe/ferry"
+            license "MIT"
+
+            depends_on arch: :arm64
+            depends_on macos: :tahoe
+
+            on_macos do
+              on_arm do
+                url "https://github.com/softmaxe/ferry/releases/download/$TAG/$arm_archive"
+                sha256 "$arm_sha"
+              end
+            end
+
+            def install
+              bin.install "ferry"
+              prefix.install "LICENSE"
+            end
+
+            test do
+              assert_equal "ferry #{version}", shell_output("#{bin}/ferry --version").strip
+            end
+          end
+          EOF
+
+          ruby -c formula/ferry.rb
+
+      - name: Upload candidate formula
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: homebrew-formula
+          path: formula/ferry.rb
+          if-no-files-found: error
+          retention-days: 30
+
+  formula-test:
+    name: Test formula on arm64
+    needs: release
+    runs-on: macos-26
+    timeout-minutes: 25
+    permissions:
+      contents: read
+    steps:
+      - name: Download candidate formula
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: homebrew-formula
+          path: formula
+
+      - name: Install and test formula
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          brew tap-new softmaxe/release-test
+          test_tap="$(brew --repository softmaxe/release-test)"
+          install -m 0644 formula/ferry.rb "$test_tap/Formula/ferry.rb"
+
+          brew audit --strict softmaxe/release-test/ferry
+          brew install softmaxe/release-test/ferry
+          brew test softmaxe/release-test/ferry
+
+          installed_archs="$(lipo -archs "$(brew --prefix ferry)/bin/ferry")"
+          test "$installed_archs" = "$EXPECTED_ARCH"
+
+  tap-sync:
+    name: Update Homebrew tap
+    needs:
+      - build
+      - formula-test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    # The environment only admits v*.*.* tags, which scopes the tap token to releases.
+    environment: homebrew-tap
+    concurrency:
+      group: homebrew-tap-ferry
+      cancel-in-progress: false
+    steps:
+      - name: Check out Homebrew tap
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: softmaxe/homebrew-tap
+          ref: main
+          path: homebrew-tap
+          # Credentials stay persisted here because the push below needs them,
+          # and every step in this job is first-party shell.
+          token: ${{ secrets.FERRY_HOMEBREW_UPDATER }}
+
+      - name: Download tested formula
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: homebrew-formula
+          path: formula
+
+      - name: Commit and push formula
+        shell: bash
+        env:
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          set -euo pipefail
+          cd homebrew-tap
+
+          if [[ -f Formula/ferry.rb ]]; then
+            current_version="$(sed -nE 's/.*-v([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' Formula/ferry.rb | head -n 1)"
+            if [[ -z "$current_version" ]]; then
+              echo "Existing Formula/ferry.rb has no version" >&2
+              exit 1
+            fi
+            newest_version="$(printf '%s\n' "$current_version" "$VERSION" | sort -V | tail -n 1)"
+            if [[ "$current_version" != "$VERSION" && "$newest_version" = "$current_version" ]]; then
+              echo "Refusing to replace newer Formula $current_version with $VERSION" >&2
+              exit 1
+            fi
+          fi
+
+          install -m 0644 ../formula/ferry.rb Formula/ferry.rb
+
+          status_paths="$(git status --porcelain=v1 --untracked-files=all | awk '{ print $2 }' | LC_ALL=C sort -u)"
+          if [[ -n "$status_paths" && "$status_paths" != "Formula/ferry.rb" ]]; then
+            echo "Unexpected Homebrew tap changes:" >&2
+            git status --short >&2
+            exit 1
+          fi
+
+          git add Formula/ferry.rb
+          if git diff --cached --quiet; then
+            echo "Formula/ferry.rb is already current"
+            exit 0
+          fi
+
+          git diff --cached --check
+          test "$(git diff --cached --name-only)" = "Formula/ferry.rb"
+          git diff --cached -- Formula/ferry.rb
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: update ferry to $VERSION"
+          git push origin HEAD:main
