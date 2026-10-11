@@ -22,6 +22,8 @@ The five default triage labels, each label string matching its role name. See `d
 
 Merging a pull request or publishing a release follows `docs/agents/merge-and-release.md`.
 
+When the owner asks to update or bump the version without naming one, bump the patch: add 0.0.1 to the current `VERSION` in the `Makefile` (e.g. 0.0.1 → 0.0.2). This replaces the SemVer choice in step 1 of the release procedure.
+
 ### Domain docs
 
 Single-context: one `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
