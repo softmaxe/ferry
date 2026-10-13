@@ -13,7 +13,9 @@ The owner tests every change locally before opening a pull request, so pull requ
 
 Pushing a `v*.*.*` tag runs `.github/workflows/release.yml`, which builds the binary, publishes the GitHub Release, and updates `Formula/ferry.rb` in `softmaxe/homebrew-tap`. The workflow refuses tags that are not on `main` or that differ from `VERSION` in the `Makefile`.
 
-1. Choose the next version with SemVer from the commits since the last tag (`git log --oneline "$(git describe --tags --abbrev=0 origin/main)..origin/main"`): a breaking change bumps major, `feat` bumps minor, anything else bumps patch.
+1. Choose the next version. When the owner names one, use it. Otherwise count from the latest release tag (`git describe --tags --abbrev=0 origin/main`); when `VERSION` in the `Makefile` is already ahead of that tag, it is the unreleased next version, so release it as is.
+   - The owner asks to bump the version without naming one: increment the patch number of the tag (v0.0.9 → 0.0.10). When the commits since the tag include a breaking change or a `feat`, tell the owner which bump SemVer would choose.
+   - Otherwise, apply SemVer to the commits since the tag (`git log --oneline "$(git describe --tags --abbrev=0 origin/main)..origin/main"`): a breaking change bumps major, `feat` bumps minor, anything else bumps patch.
 2. Set `VERSION` in the `Makefile` to that version, either in the feature pull request itself or in a pull request titled `chore: release vX.Y.Z`, and merge it as above.
 3. Tag the merged commit and push the tag:
 

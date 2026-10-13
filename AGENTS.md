@@ -20,7 +20,7 @@ The five default triage labels, each label string matching its role name. See `d
 
 ### Merging and releasing
 
-Merging a pull request or publishing a release follows `docs/agents/merge-and-release.md`.
+Merging a pull request, bumping the version, or publishing a release follows `docs/agents/merge-and-release.md`.
 
 ### Domain docs
 
