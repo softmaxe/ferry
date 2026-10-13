@@ -16,8 +16,6 @@
 ferry 3
 ```
 
-https://github.com/user-attachments/assets/b46ac753-cedb-400c-b556-9e2322936171
-
 - 运行一次就退出，没有常驻服务或配置文件。
 - 不需要 scripting addition，也不需要更改系统完整性保护 SIP 的设置。
 - 附带 Space 1 到 5 的 Raycast Script Commands。

@@ -17,8 +17,6 @@ You do not need yabai installed.
 ferry 3
 ```
 
-https://github.com/user-attachments/assets/483781fc-7003-433a-9ea7-7cbea45ff641
-
 - Runs once and exits, with no background service or configuration file.
 - Requires no scripting addition or changes to System Integrity Protection.
 - Includes Raycast Script Commands for Spaces 1 to 5.

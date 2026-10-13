@@ -10,7 +10,6 @@ on:
     paths-ignore:
       - "**.md"
       - "docs/**"
-      - "demo/**"
 
 concurrency:
   group: ci-${{ github.event_name }}-${{ github.ref }}
@@ -29,7 +28,6 @@ jobs:
       pull-requests: read
     outputs:
       code: ${{ steps.filter.outputs.code }}
-      demo: ${{ steps.filter.outputs.demo }}
     steps:
       # Only GitHub-owned actions are allowed in this repository, so filter with the gh CLI.
       - name: Filter changed paths
@@ -41,16 +39,13 @@ jobs:
         run: |
           files=$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/files" --jq '.[].filename')
           code=false
-          demo=false
           while IFS= read -r file; do
             case "$file" in
-              demo/*) demo=true ;;
               *.md | docs/* | "") ;;
               *) code=true ;;
             esac
           done <<< "$files"
           echo "code=$code" >> "$GITHUB_OUTPUT"
-          echo "demo=$demo" >> "$GITHUB_OUTPUT"
 
   check:
     name: Build and test
@@ -72,46 +67,3 @@ jobs:
         env:
           CFLAGS: -O2 -Werror
         run: make all test
-
-  demo:
-    name: Demo checks
-    needs: changes
-    # Not a required check: the demo is video source and never ships in a release.
-    if: needs.changes.outputs.demo == 'true'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    defaults:
-      run:
-        shell: bash
-        working-directory: demo
-    steps:
-      - name: Check out source
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      # demo/mise.toml stays the single source of the Node version; mise-action is not
-      # GitHub-owned, so read the version and install it with first-party tooling.
-      - name: Read Node version
-        id: tools
-        run: |
-          set -euo pipefail
-          node="$(sed -n 's/^node = "\(.*\)"$/\1/p' mise.toml)"
-          test -n "$node"
-          echo "node=$node" >> "$GITHUB_OUTPUT"
-
-      - name: Set up Node
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: ${{ steps.tools.outputs.node }}
-          cache: npm
-          cache-dependency-path: demo/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Typecheck
-        run: npm run typecheck
-
-      - name: Test
-        run: npm test
