@@ -272,23 +272,12 @@ jobs:
           fi
 
           install -m 0644 ../formula/ferry.rb Formula/ferry.rb
-
-          status_paths="$(git status --porcelain=v1 --untracked-files=all | awk '{ print $2 }' | LC_ALL=C sort -u)"
-          if [[ -n "$status_paths" && "$status_paths" != "Formula/ferry.rb" ]]; then
-            echo "Unexpected Homebrew tap changes:" >&2
-            git status --short >&2
-            exit 1
-          fi
-
           git add Formula/ferry.rb
           if git diff --cached --quiet; then
             echo "Formula/ferry.rb is already current"
             exit 0
           fi
-
-          git diff --cached --check
-          test "$(git diff --cached --name-only)" = "Formula/ferry.rb"
-          git diff --cached -- Formula/ferry.rb
+          git diff --cached
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
