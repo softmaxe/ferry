@@ -51,8 +51,6 @@ extern AXError _AXUIElementGetWindow(AXUIElementRef ref, uint32_t *wid);
 
 typedef int64_t (*bridged_operation_fn)(void *operation);
 
-static bool g_verbose;
-
 static void fail(int code, const char *fmt, ...) __attribute__((noreturn, format(printf, 2, 3)));
 static void fail(int code, const char *fmt, ...)
 {
@@ -324,6 +322,7 @@ int main(int argc, char **argv)
     @autoreleasepool {
         uint64_t start = clock_gettime_nsec_np(CLOCK_UPTIME_RAW);
         bool follow = true;
+        bool verbose = false;
         uint32_t wid = 0;
         int index = 0;
 
@@ -339,7 +338,7 @@ int main(int argc, char **argv)
             } else if (strcmp(arg, "--no-follow") == 0) {
                 follow = false;
             } else if (strcmp(arg, "--verbose") == 0) {
-                g_verbose = true;
+                verbose = true;
             } else if (strcmp(arg, "--window") == 0 && i + 1 < argc) {
                 wid = (uint32_t) parse_positive(argv[++i], UINT32_MAX);
                 if (!wid) fail(2, "invalid window id '%s'", argv[i]);
@@ -429,7 +428,7 @@ int main(int argc, char **argv)
         if (follow) focus_window(&psn, wid, window_ref);
         if (window_ref) CFRelease(window_ref);
 
-        if (g_verbose) {
+        if (verbose) {
             printf("window %u (via %s) -> space %d (id %llu): %s in %.1f ms, %s, total %.1f ms\n",
                    wid, source, index, (unsigned long long) dst_sid,
                    moved ? "moved" : "already there", move_ms,

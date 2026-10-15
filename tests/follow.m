@@ -10,6 +10,8 @@ extern CFArrayRef SLSCopyManagedDisplaySpaces(int cid);
 extern CFArrayRef SLSCopySpacesForWindows(int cid, int selector, CFArrayRef windows);
 extern int SLSSpaceGetType(int cid, uint64_t sid);
 
+#define SPACE_TYPE_FULLSCREEN 4
+
 static void pump(double seconds)
 {
     NSDate *end = [NSDate dateWithTimeIntervalSinceNow:seconds];
@@ -102,14 +104,14 @@ int main(int argc, char **argv)
                 ++index;
                 uint64_t sid = [space[@"id64"] unsignedLongLongValue];
                 if (sid == src) src_index = index;
-                else if (current && !dst && SLSSpaceGetType(cid, sid) != 4) {
+                else if (current && !dst && SLSSpaceGetType(cid, sid) != SPACE_TYPE_FULLSCREEN) {
                     dst = sid;
                     dst_index = index;
                 }
             }
         }
         if (displays) CFRelease(displays);
-        if (!src_index || !dst_index || SLSSpaceGetType(cid, src) == 4) {
+        if (!src_index || !dst_index || SLSSpaceGetType(cid, src) == SPACE_TYPE_FULLSCREEN) {
             fputs("SKIP: test-follow requires two normal Spaces on the active display\n", stderr);
             return 77;
         }

@@ -10,28 +10,13 @@
 set -euo pipefail
 
 space=4
-script_dir="${0:A:h}"
-project_dir="${script_dir:h}"
 
-if [[ -n "${FERRY_BINARY:-}" ]]; then
-  binary_path="$FERRY_BINARY"
-elif binary_path="$(command -v ferry 2>/dev/null)" && [[ -x "$binary_path" ]]; then
-  :
-else
-  binary_path=""
-  for candidate in \
-    "/opt/homebrew/bin/ferry" \
-    "/usr/local/bin/ferry" \
-    "$HOME/.local/bin/ferry" \
-    "$project_dir/build/ferry"; do
-    if [[ -x "$candidate" ]]; then
-      binary_path="$candidate"
-      break
-    fi
-  done
-fi
+# Raycast runs scripts with a minimal PATH, so also search the usual install
+# locations and this checkout's build/ directory, after the inherited PATH.
+path+=(/opt/homebrew/bin /usr/local/bin "$HOME/.local/bin" "${0:A:h:h}/build")
+binary_path="${FERRY_BINARY:-$(whence -p ferry || true)}"
 
-if [[ -z "$binary_path" || ! -x "$binary_path" ]]; then
+if [[ ! -x "$binary_path" ]]; then
   print -u2 "ferry binary not found. Install it with: brew install softmaxe/tap/ferry"
   exit 127
 fi
