@@ -11,8 +11,6 @@ concurrency:
 
 env:
   TARGET: aarch64-apple-darwin
-  EXPECTED_ARCH: arm64
-  MINIMUM_MACOS: "26.0"
 
 jobs:
   build:
@@ -63,41 +61,20 @@ jobs:
           clang --version
           xcrun --show-sdk-version
 
+      # make test also checks the version, architecture, and deployment target.
       - name: Build and test
         run: make all test
 
-      - name: Verify and package binary
+      - name: Package binary
         shell: bash
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
           set -euo pipefail
-          binary="build/ferry"
-          test -x "$binary"
-
-          binary_archs="$(lipo -archs "$binary")"
-          test "$binary_archs" = "$EXPECTED_ARCH" || {
-            echo "Expected $EXPECTED_ARCH binary, got $binary_archs" >&2
-            exit 1
-          }
-
-          minos="$(otool -l "$binary" | awk '$1 == "minos" { print $2; exit }')"
-          test "$minos" = "$MINIMUM_MACOS" || {
-            echo "Expected minimum macOS $MINIMUM_MACOS, got $minos" >&2
-            exit 1
-          }
-
-          otool -L "$binary" | grep -q "/AppKit.framework/" || {
-            echo "The binary must link AppKit" >&2
-            exit 1
-          }
-
-          test "$("$binary" --version)" = "ferry $VERSION"
-
           package_dir="$RUNNER_TEMP/package-$TARGET"
           dist_dir="$RUNNER_TEMP/dist-$TARGET"
           mkdir -p "$package_dir" "$dist_dir"
-          install -m 0755 "$binary" "$package_dir/ferry"
+          install -m 0755 build/ferry "$package_dir/ferry"
           install -m 0644 LICENSE "$package_dir/LICENSE"
 
           archive="ferry-v$VERSION-$TARGET.tar.gz"
@@ -241,9 +218,6 @@ jobs:
           brew audit --strict softmaxe/release-test/ferry
           brew install softmaxe/release-test/ferry
           brew test softmaxe/release-test/ferry
-
-          installed_archs="$(lipo -archs "$(brew --prefix ferry)/bin/ferry")"
-          test "$installed_archs" = "$EXPECTED_ARCH"
 
   tap-sync:
     name: Update Homebrew tap

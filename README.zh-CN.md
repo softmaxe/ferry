@@ -131,7 +131,7 @@ make test
 make install PREFIX="$HOME/.local"
 ```
 
-`make test` 只检查命令行接口，不会移动窗口。`make test-follow` 针对后台 `--window` 命令运行真实桌面回归测试。它需要辅助功能权限，且当前显示器上有两个普通 Space；测试会创建临时测试窗口并临时切换 Space，结束后关闭测试窗口并恢复原来的 App。
+`make test` 只检查命令行接口和构建产物的架构、最低系统版本及链接的框架，不会移动窗口。`make test-follow` 针对后台 `--window` 命令运行真实桌面回归测试。它需要辅助功能权限，且当前显示器上有两个普通 Space；测试会创建临时测试窗口并临时切换 Space，结束后关闭测试窗口并恢复原来的 App。
 
 ### 升级和卸载
 
