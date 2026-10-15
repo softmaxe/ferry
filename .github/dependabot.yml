@@ -4,6 +4,9 @@ updates:
     directory: /
     schedule:
       interval: monthly
+    # Let new action releases age a week before adopting them.
+    cooldown:
+      default-days: 7
     groups:
       actions:
         patterns:
