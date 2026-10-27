@@ -95,7 +95,7 @@ Space 编号从 1 开始，按调度中心的顺序计算所有显示器上的�
 | `no focused window` | 先点一下要移动的窗口，再重试。 |
 | `window N not found` | 传给 `--window` 的 ID 可能已失效。改用焦点窗口或有效的窗口 ID。 |
 | `window ... did not move` | ferry 未能在一秒内确认移动完成。系统面板、全屏窗口等窗口可能拒绝移动。 |
-| `unsupported macOS version` | ferry 只支持 macOS 26。 |
+| `unsupported macOS version` | ferry 找不到 SkyLight 的私有窗口移动接口，通常是 macOS 更新改动了它。ferry 只支持 macOS 26。 |
 | 移动的不是想要的窗口 | 给运行 ferry 的 App 打开辅助功能权限，见[设置](#设置)。 |
 | Space 编号和看到的顺序不一致 | 编号包括所有显示器上的全屏 Space；同时关闭自动重新排列，见[设置](#设置)。 |
 | 新二进制或脚本启动慢 | 比较首次和后续运行的速度。`--verbose` 只测量 ferry 内部执行，启动器和 macOS 启动检查可能另有耗时。 |
@@ -131,7 +131,7 @@ make test
 make install PREFIX="$HOME/.local"
 ```
 
-`make test` 只检查命令行接口和构建产物的架构、最低系统版本及链接的框架，不会移动窗口。`make test-follow` 针对后台 `--window` 命令运行真实桌面回归测试。它需要辅助功能权限，且当前显示器上有两个普通 Space；测试会创建临时测试窗口并临时切换 Space，结束后关闭测试窗口并恢复原来的 App。
+`make test` 只检查命令行接口和构建产物的架构、最低系统版本，以及是否链接了 AppKit，不会移动窗口。`make test-follow` 针对后台 `--window` 命令运行真实桌面回归测试。它需要辅助功能权限，且当前显示器上有两个普通 Space；测试会创建临时测试窗口并临时切换 Space，结束后关闭测试窗口并恢复原来的 App。
 
 ### 升级和卸载
 

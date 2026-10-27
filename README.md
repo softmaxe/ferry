@@ -129,7 +129,7 @@ from the app's Accessibility window list, the window may move without Follow.
 | `no focused window` | Click the window you want to move, then retry. |
 | `window N not found` | The ID passed to `--window` may be stale. Use the focused window or a current window ID. |
 | `window ... did not move` | ferry could not confirm the move within one second. Some windows, such as system panels and fullscreen windows, may refuse the move. |
-| `unsupported macOS version` | ferry supports macOS 26 only. |
+| `unsupported macOS version` | ferry could not find SkyLight's private window move interface, usually because a macOS update changed it. ferry supports macOS 26 only. |
 | ferry moves the wrong window | Turn on Accessibility for the app that runs ferry. See [Set up](#set-up). |
 | Space numbers don't match what you see | Count Spaces across all displays, including fullscreen Spaces, and turn off automatic rearranging. See [Set up](#set-up). |
 | A new binary or script starts slowly | Compare the first run with later runs. `--verbose` measures work inside ferry, so launcher and macOS startup checks can add time outside that measurement. |
@@ -171,7 +171,7 @@ make install PREFIX="$HOME/.local"
 ```
 
 `make test` checks the command-line interface and the built binary's architecture,
-deployment target, and linked frameworks. It does not move windows.
+deployment target, and that it links AppKit. It does not move windows.
 `make test-follow` runs the live desktop regression for background `--window`
 commands. It requires Accessibility and two normal Spaces on the active display,
 creates temporary test windows, and temporarily switches Spaces. It closes the
