@@ -67,6 +67,16 @@ static double elapsed_ms(uint64_t start_ns)
     return (clock_gettime_nsec_np(CLOCK_UPTIME_RAW) - start_ns) / 1e6;
 }
 
+// GetProcessPID is deprecated, but SkyLight still identifies processes by PSN.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+static pid_t process_pid(ProcessSerialNumber *psn)
+{
+    pid_t pid = 0;
+    return GetProcessPID(psn, &pid) == noErr ? pid : 0;
+}
+#pragma clang diagnostic pop
+
 //
 // Symbol lookup for functions that SkyLight does not export (yabai: misc/macho_dlsym.h).
 //
@@ -314,8 +324,6 @@ static long parse_positive(const char *text, long max)
     return (*end == '\0' && value > 0 && value <= max) ? value : 0;
 }
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 int main(int argc, char **argv)
 {
     @autoreleasepool {
@@ -374,9 +382,8 @@ int main(int argc, char **argv)
 
         if (!wid) {
             ProcessSerialNumber front = {0};
-            pid_t pid = 0;
             _SLPSGetFrontProcess(&front);
-            GetProcessPID(&front, &pid);
+            pid_t pid = process_pid(&front);
 
             source = "accessibility";
             wid = ax_focused_window(pid, &window_ref);
@@ -397,10 +404,8 @@ int main(int argc, char **argv)
         // AX may omit windows on inactive Spaces. Resolve the reference before
         // moving so explicit window IDs can use yabai's full focus/raise path.
         if (follow && !window_ref) {
-            pid_t pid = 0;
-            if (GetProcessPID(&psn, &pid) == noErr && pid > 0) {
-                window_ref = ax_window_for_id(pid, wid);
-            }
+            pid_t pid = process_pid(&psn);
+            if (pid > 0) window_ref = ax_window_for_id(pid, wid);
         }
 
         bool moved = false;
@@ -437,4 +442,3 @@ int main(int argc, char **argv)
 
     return 0;
 }
-#pragma clang diagnostic pop
