@@ -22,7 +22,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <unistd.h>
 
 #ifndef FERRY_VERSION
 #define FERRY_VERSION "dev"
@@ -312,7 +311,7 @@ static long parse_positive(const char *text, long max)
 {
     char *end = NULL;
     long value = strtol(text, &end, 10);
-    return (end && *end == '\0' && value > 0 && value <= max) ? value : 0;
+    return (*end == '\0' && value > 0 && value <= max) ? value : 0;
 }
 
 #pragma clang diagnostic push
