@@ -215,6 +215,8 @@ jobs:
           test_tap="$(brew --repository softmaxe/release-test)"
           install -m 0644 formula/ferry.rb "$test_tap/Formula/ferry.rb"
 
+          # Homebrew refuses to load formulae from a tap until they are trusted.
+          brew trust --formula softmaxe/release-test/ferry
           brew audit --strict softmaxe/release-test/ferry
           brew install softmaxe/release-test/ferry
           brew test softmaxe/release-test/ferry
