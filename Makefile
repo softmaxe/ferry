@@ -1,4 +1,4 @@
-VERSION = 0.0.1
+VERSION = 0.0.2
 
 ARCH        = arm64
 MACOS_MIN   = 26.0
