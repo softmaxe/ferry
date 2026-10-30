@@ -77,6 +77,7 @@ static void restore_app(NSRunningApplication *app, AXUIElementRef window)
     if (window) AXUIElementPerformAction(window, kAXRaiseAction);
     pump(0.3);
 }
+#pragma clang diagnostic pop
 
 int main(int argc, char **argv)
 {
@@ -186,4 +187,3 @@ int main(int argc, char **argv)
         return result;
     }
 }
-#pragma clang diagnostic pop
