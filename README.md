@@ -170,8 +170,9 @@ make test
 make install PREFIX="$HOME/.local"
 ```
 
-`make test` checks the command-line interface and the built binary's architecture,
-deployment target, and that it links AppKit. It does not move windows.
+`make test` checks CLI output and exit codes, the built binary's architecture,
+deployment target and AppKit linkage, and how the five Raycast scripts locate
+the executable and pass their Space numbers. These checks run without moving windows.
 `make test-follow` runs the live desktop regression for background `--window`
 commands. It requires Accessibility and two normal Spaces on the active display,
 creates temporary test windows, and temporarily switches Spaces. It closes the

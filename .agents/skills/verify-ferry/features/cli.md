@@ -7,8 +7,8 @@ argument errors with a distinct exit status.
 
 - `cli-help`: `--help` and `-h` print identical usage to stdout, exit 0.
 - `cli-version`: `--version` prints `ferry` and the Makefile version, exit 0.
-- `cli-invalid`: absent, nonnumeric, zero, overflowing, duplicate, and unknown
-  arguments are rejected with exit 2; invalid/missing window IDs are rejected.
+- `cli-invalid`: missing, nonnumeric, zero, or overflowing Space indexes, a
+  second index, unknown options, and invalid or missing window IDs exit with 2.
 - `cli-streams`: success text goes to stdout; argument errors go to stderr.
 
 ## How to get to it (user POV)

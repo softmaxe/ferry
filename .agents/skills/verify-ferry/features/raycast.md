@@ -55,4 +55,3 @@ below exercise the real executable and observe window and Space changes.
 - Scripts prefer `FERRY_BINARY`, then PATH and standard install directories,
   then the checkout's `build/`. The isolated scratch binary needs the override.
 - Homebrew installs the binary but does not install these scripts.
-- Testing a wrapper with a fake binary proves neither movement nor real lookup.
