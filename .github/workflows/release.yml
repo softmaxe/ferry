@@ -9,8 +9,9 @@ concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false
 
-env:
-  TARGET: aarch64-apple-darwin
+defaults:
+  run:
+    shell: bash
 
 jobs:
   release:
@@ -21,8 +22,8 @@ jobs:
       contents: write
       id-token: write
       attestations: write
-    outputs:
-      version: ${{ steps.version.outputs.version }}
+    env:
+      ARCHIVE: ferry-${{ github.ref_name }}-aarch64-apple-darwin.tar.gz
     steps:
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -31,21 +32,14 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Verify tag is on main
-        shell: bash
+      - name: Validate release tag
         run: |
           set -euo pipefail
           git merge-base --is-ancestor "$GITHUB_SHA" origin/main || {
             echo "Tag $GITHUB_REF_NAME points to $GITHUB_SHA, which is not on main" >&2
             exit 1
           }
-
-      - name: Read version and validate release tag
-        id: version
-        shell: bash
-        run: |
-          set -euo pipefail
-          version="$(sed -n 's/^VERSION = \(.*\)$/\1/p' Makefile | head -n 1)"
+          version="$(make -s print-version)"
           if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "Makefile version must match MAJOR.MINOR.PATCH: $version" >&2
             exit 1
@@ -54,98 +48,78 @@ jobs:
             echo "Makefile version $version does not match tag $GITHUB_REF_NAME" >&2
             exit 1
           fi
-          echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Show toolchain
-        shell: bash
         run: |
           sw_vers
           clang --version
           xcrun --show-sdk-version
 
-      # make test also checks the version, architecture, and deployment target.
       - name: Build and test
-        run: make all test
+        run: make test
 
       - name: Package binary
-        shell: bash
-        env:
-          VERSION: ${{ steps.version.outputs.version }}
         run: |
           set -euo pipefail
-          package_dir="$RUNNER_TEMP/package-$TARGET"
-          dist_dir="$GITHUB_WORKSPACE/dist"
-          mkdir -p "$package_dir" "$dist_dir"
+          package_dir="$RUNNER_TEMP/package"
+          mkdir -p "$package_dir" dist
           install -m 0755 build/ferry "$package_dir/ferry"
           install -m 0644 LICENSE "$package_dir/LICENSE"
 
-          archive="ferry-v$VERSION-$TARGET.tar.gz"
-          COPYFILE_DISABLE=1 tar -czf "$dist_dir/$archive" -C "$package_dir" ferry LICENSE
-          (
-            cd "$dist_dir"
-            shasum -a 256 "$archive" > "$archive.sha256"
-          )
+          cd dist
+          COPYFILE_DISABLE=1 tar -czf "$ARCHIVE" -C "$package_dir" ferry LICENSE
+          shasum -a 256 "$ARCHIVE" > "$ARCHIVE.sha256"
 
       - name: Attest release archives
-        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        env:
+          NODE_OPTIONS: --max-http-header-size=32768
         with:
           subject-path: dist/*.tar.gz
 
       - name: Create draft and publish release
-        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.ref_name }}
         run: |
           set -euo pipefail
-          if is_draft="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft 2>/dev/null)"; then
+          if is_draft="$(gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft 2>/dev/null)"; then
             test "$is_draft" = "true" || {
-              echo "Release $TAG is already published and will not be overwritten" >&2
+              echo "Release $GITHUB_REF_NAME is already published and will not be overwritten" >&2
               exit 1
             }
           else
-            gh release create "$TAG" \
+            gh release create "$GITHUB_REF_NAME" \
               --repo "$GITHUB_REPOSITORY" \
               --draft \
               --generate-notes \
-              --title "$TAG"
+              --title "$GITHUB_REF_NAME"
           fi
 
-          gh release upload "$TAG" dist/* \
+          gh release upload "$GITHUB_REF_NAME" dist/* \
             --repo "$GITHUB_REPOSITORY" \
             --clobber
 
-          gh release edit "$TAG" \
+          gh release edit "$GITHUB_REF_NAME" \
             --repo "$GITHUB_REPOSITORY" \
             --draft=false \
             --latest
 
       - name: Generate Homebrew formula
-        shell: bash
-        env:
-          TAG: ${{ github.ref_name }}
-          VERSION: ${{ steps.version.outputs.version }}
         run: |
           set -euo pipefail
-          arm_archive="ferry-v$VERSION-$TARGET.tar.gz"
-          arm_sha="$(awk '{ print $1 }' "dist/$arm_archive.sha256")"
+          sha="$(awk '{ print $1 }' "dist/$ARCHIVE.sha256")"
 
           mkdir -p formula
           cat > formula/ferry.rb <<EOF
           class Ferry < Formula
             desc "Move the focused macOS window to another Space"
             homepage "https://github.com/softmaxe/ferry"
+            url "https://github.com/softmaxe/ferry/releases/download/$GITHUB_REF_NAME/$ARCHIVE"
+            sha256 "$sha"
             license "MIT"
 
             depends_on arch: :arm64
             depends_on macos: :tahoe
-
-            on_macos do
-              on_arm do
-                url "https://github.com/softmaxe/ferry/releases/download/$TAG/$arm_archive"
-                sha256 "$arm_sha"
-              end
-            end
 
             def install
               bin.install "ferry"
@@ -158,12 +132,9 @@ jobs:
           end
           EOF
 
-          ruby -c formula/ferry.rb
-
       # Reuse this runner to avoid a second macOS queue wait. The release must
       # be public before Homebrew can validate its download URL.
       - name: Install and test formula
-        shell: bash
         run: |
           set -euo pipefail
           git config --global user.name "github-actions[bot]"
@@ -205,8 +176,7 @@ jobs:
           repository: softmaxe/homebrew-tap
           ref: main
           path: homebrew-tap
-          # Credentials stay persisted here because the push below needs them,
-          # and every step in this job is first-party shell.
+          # Persist credentials for the tap push below.
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
 
       - name: Download tested formula
@@ -216,12 +186,10 @@ jobs:
           path: formula
 
       - name: Commit and push formula
-        shell: bash
-        env:
-          VERSION: ${{ needs.release.outputs.version }}
         run: |
           set -euo pipefail
           cd homebrew-tap
+          version="${GITHUB_REF_NAME#v}"
 
           if [[ -f Formula/ferry.rb ]]; then
             current_version="$(sed -nE 's/.*-v([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' Formula/ferry.rb | head -n 1)"
@@ -229,9 +197,9 @@ jobs:
               echo "Existing Formula/ferry.rb has no version" >&2
               exit 1
             fi
-            newest_version="$(printf '%s\n' "$current_version" "$VERSION" | sort -V | tail -n 1)"
-            if [[ "$current_version" != "$VERSION" && "$newest_version" = "$current_version" ]]; then
-              echo "Refusing to replace newer Formula $current_version with $VERSION" >&2
+            newest_version="$(printf '%s\n' "$current_version" "$version" | sort -V | tail -n 1)"
+            if [[ "$current_version" != "$version" && "$newest_version" = "$current_version" ]]; then
+              echo "Refusing to replace newer Formula $current_version with $version" >&2
               exit 1
             fi
           fi
@@ -246,5 +214,5 @@ jobs:
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "chore: update ferry to $VERSION"
+          git commit -m "chore: update ferry to $version"
           git push origin HEAD:main

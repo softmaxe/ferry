@@ -20,9 +20,13 @@ check() {
   fi
 }
 
-check "architecture"   "$arch"          "$(lipo -archs "$binary")"
-check "minimum macOS"  "$minimum_macos" "$(otool -l "$binary" | awk '$1 == "minos" { print $2; exit }')"
-check "links AppKit"   "yes"            "$(otool -L "$binary" | grep -q '/AppKit.framework/' && echo yes || echo no)"
+architecture="$(lipo -archs "$binary")"
+deployment="$(vtool -show-build "$binary" | awk '$1 == "platform" { platform = $2 } $1 == "minos" { print platform, $2 }')"
+appkit="$(otool -L "$binary" | awk 'NR > 1 && $1 ~ /\/AppKit\.framework\/(Versions\/[^\/]+\/)?AppKit$/ { found = 1 } END { print found ? "yes" : "no" }')"
+
+check "architecture" "$arch" "$architecture"
+check "minimum macOS" "MACOS $minimum_macos" "$deployment"
+check "links AppKit" "yes" "$appkit"
 
 if ((failures)); then
   echo "$failures test(s) failed" >&2
