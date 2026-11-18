@@ -16,9 +16,9 @@ space=3
 path+=(/opt/homebrew/bin /usr/local/bin "$HOME/.local/bin" "${0:A:h:h}/build")
 binary_path="${FERRY_BINARY:-$(whence -p ferry || true)}"
 
-if [[ ! -x "$binary_path" ]]; then
+if [[ ! -f "$binary_path" || ! -x "$binary_path" ]]; then
   print -u2 "ferry binary not found. Install it with: brew install softmaxe/tap/ferry"
   exit 127
 fi
 
-exec "$binary_path" "$space"
+exec "${binary_path:a}" "$space"
