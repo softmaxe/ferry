@@ -23,6 +23,9 @@ Preconditions: native desktop control, manual fixture baseline from the index,
 Raycast installed and already configured for these scripts for action/hotkey
 coverage. Do not modify the user's extension directory or hotkeys implicitly.
 
+`make test` exercises script dispatch on a headless machine. The live journeys
+below exercise the real executable and observe window and Space changes.
+
 - **Shell script route.** Focus `Ferry follow test: target` and run `"$FERRY_VERIFY"
   capture "$FERRY_EVIDENCE" raycast-shell env FERRY_BINARY="$FERRY_BIN"
   /bin/zsh raycast/ferry-to-space-2.sh`. Require exit 0, empty streams, target on

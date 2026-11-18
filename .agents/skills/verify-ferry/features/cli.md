@@ -24,9 +24,9 @@ Preconditions: launch and doctor passed; no live desktop or Accessibility needed
   "$FERRY_EVIDENCE/cli.pty.txt" "$FERRY_VERIFY" cli "$FERRY_EVIDENCE"`.
   Require exit 0 and the final `PASS:` line.
 - **Inspect proof.** `help`, `help-short`, `version`, and `invalid-index` action
-  folders contain separate streams and statuses. `contract/stdout.txt` contains
-  ten `ok:` messages from the existing CLI tests; the helper additionally checks
-  identical help aliases and stream routing.
+  folders contain example streams and statuses. `contract/stdout.txt` records
+  the passing cases from `tests/cli.sh`, which checks help alias equivalence,
+  the version, stream routing, and argument diagnostics.
 - **Confirm teardown.** Run the skill cleanup. The PTY transcript and all action
   folders remain while `scratch/ferry` is removed.
 
@@ -34,5 +34,4 @@ Preconditions: launch and doctor passed; no live desktop or Accessibility needed
 
 - Valid destination arguments would enter real window-management code. The safe
   cases above exit during parsing, before WindowServer access; this is not a mock.
-- `tests/cli.sh` merges streams internally, so its pass alone cannot prove routing.
 - A `make test` pass does not prove a move or a Space focus change.
