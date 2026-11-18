@@ -304,6 +304,7 @@ static void usage(FILE *stream)
           "  --no-follow     move the window without switching spaces\n"
           "  --window <id>   act on this window id instead of the focused window\n"
           "  --verbose       print what was done and how long it took\n"
+          "  -h, --help      print this help and exit\n"
           "  --version       print the version and exit\n", stream);
 }
 
