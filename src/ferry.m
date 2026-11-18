@@ -13,7 +13,6 @@
 #include <mach-o/dyld.h>
 #include <mach-o/loader.h>
 #include <mach-o/nlist.h>
-#include <objc/message.h>
 #include <objc/runtime.h>
 #include <limits.h>
 #include <stdarg.h>
@@ -49,6 +48,10 @@ extern CGError SLPSPostEventRecordTo(ProcessSerialNumber *psn, uint8_t *bytes);
 extern AXError _AXUIElementGetWindow(AXUIElementRef ref, uint32_t *wid);
 
 typedef int64_t (*bridged_operation_fn)(void *operation);
+
+@interface SLSBridgedMoveWindowsToManagedSpaceOperation : NSObject
+- (instancetype)initWithWindows:(NSArray *)windows spaceID:(uint64_t)sid;
+@end
 
 static void fail(int code, const char *fmt, ...) __attribute__((noreturn, format(printf, 2, 3)));
 static void fail(int code, const char *fmt, ...)
@@ -140,14 +143,6 @@ static void *macho_find_symbol(const char *target_image, const char *target_symb
 // Spaces and windows.
 //
 
-static CFArrayRef window_id_array(uint32_t wid)
-{
-    CFNumberRef number = CFNumberCreate(NULL, kCFNumberSInt32Type, &wid);
-    CFArrayRef array = CFArrayCreate(NULL, (const void **) &number, 1, &kCFTypeArrayCallBacks);
-    CFRelease(number);
-    return array;
-}
-
 // Maps a 1-based Mission Control index to a space id, counting spaces across
 // all displays in order (yabai: space_manager_mission_control_space).
 static uint64_t space_for_index(int cid, int index)
@@ -177,11 +172,9 @@ static uint64_t space_for_index(int cid, int index)
     return result;
 }
 
-static bool window_is_on_space(int cid, uint32_t wid, uint64_t sid)
+static bool window_is_on_space(int cid, NSArray *windows, uint64_t sid)
 {
-    CFArrayRef windows = window_id_array(wid);
-    CFArrayRef spaces = SLSCopySpacesForWindows(cid, 0x7, windows);
-    CFRelease(windows);
+    CFArrayRef spaces = SLSCopySpacesForWindows(cid, 0x7, (CFArrayRef) windows);
     if (!spaces) return false;
 
     bool result = false;
@@ -261,17 +254,14 @@ static uint32_t window_list_front_window(pid_t pid)
 }
 
 // yabai: space_manager_move_window_to_space, macOS 26 branch.
-static int64_t move_window_to_space(bridged_operation_fn perform, uint32_t wid, uint64_t sid)
+static int64_t move_window_to_space(bridged_operation_fn perform, NSArray *windows, uint64_t sid)
 {
     Class cls = objc_getClass(BRIDGED_MOVE_CLASS);
     if (!cls) fail(1, "SkyLight class %s not found; unsupported macOS version", BRIDGED_MOVE_CLASS);
 
-    CFArrayRef windows = window_id_array(wid);
-    SEL sel = sel_registerName("initWithWindows:spaceID:");
-    id operation = ((id (*)(id, SEL, id, uint64_t)) objc_msgSend)([cls alloc], sel, (id) windows, sid);
+    id operation = [[cls alloc] initWithWindows:windows spaceID:sid];
     int64_t result = perform(operation);
     [operation release];
-    CFRelease(windows);
 
     return result;
 }
@@ -411,14 +401,16 @@ int main(int argc, char **argv)
         bool moved = false;
         double move_ms = 0;
 
-        if (!window_is_on_space(cid, wid, dst_sid)) {
+        // Match yabai's signed 32-bit representation for SkyLight window lists.
+        NSArray *windows = @[@((int32_t) wid)];
+        if (!window_is_on_space(cid, windows, dst_sid)) {
             uint64_t move_start = clock_gettime_nsec_np(CLOCK_UPTIME_RAW);
-            int64_t result = move_window_to_space(perform, wid, dst_sid);
+            int64_t result = move_window_to_space(perform, windows, dst_sid);
             SLSSpaceSetFrontPSN(cid, dst_sid, psn);
 
             // The operation is asynchronous; wait until the window server
             // reports the new space before focusing it.
-            while (!(moved = window_is_on_space(cid, wid, dst_sid)) && elapsed_ms(move_start) < MOVE_TIMEOUT_MS) {
+            while (!(moved = window_is_on_space(cid, windows, dst_sid)) && elapsed_ms(move_start) < MOVE_TIMEOUT_MS) {
                 CFRunLoopRunInMode(kCFRunLoopDefaultMode, MOVE_POLL_S, true);
             }
 
