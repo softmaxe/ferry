@@ -24,8 +24,4 @@ jobs:
           persist-credentials: false
 
       - name: Build and test
-        shell: bash
-        # Passed through the environment so the Makefile still appends its own flags.
-        env:
-          CFLAGS: -O2 -Werror
-        run: make all test
+        run: make CFLAGS="-O2 -Werror" test build/follow-test

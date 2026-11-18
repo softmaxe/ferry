@@ -27,7 +27,8 @@ Spaces on its active display, and no other desktop journey running.
 - **Inspect action evidence.** `desktop/command.txt` identifies the checkout binary
   passed to `make`; `desktop/stdout.txt` includes real IDs, indexes, verbose
   results, and assertions. Require overall exit 0 and no `SKIP:`/`FAIL:`.
-- **Stale ID.** In a separate manual fixture journey from the index, retain
+- **Stale ID.** Use a disposable desktop session containing only test windows,
+  since macOS can reuse a closed window's ID. In a separate manual fixture journey, retain
   `FERRY_TARGET`, close that fixture through its recorded PID, and immediately run
   `"$FERRY_VERIFY" capture "$FERRY_EVIDENCE" stale-window "$FERRY_BIN" --window
   "$FERRY_TARGET" 2`. Require exit 1 and `window N not found` in stderr, with no

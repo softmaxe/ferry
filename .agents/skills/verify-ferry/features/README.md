@@ -20,12 +20,18 @@ before choosing a journey. One passing journey is not full application coverage.
 ## Driving conventions
 
 Use the executable helper for command/stream/exit evidence and native UI tools
-for visible app focus and launcher actions. Manual desktop recipes share this
-setup after `doctor`; the first command reserves the lock:
+for visible app focus and launcher actions. After `doctor`, record the original
+frontmost app and Space. Build the fixture and reserve the same desktop lock as
+the automated journey.
 
 ```sh
-mkdir "${TMPDIR:-/tmp}/ferry-verification-desktop.lock"
-make build/follow-test
+make build/follow-test && mkdir "${TMPDIR:-/tmp}/ferry-verification-desktop.lock"
+```
+
+Continue only after this command succeeds. If the lock exists, leave it in
+place for its owner. Start the disposable fixture in the same shell.
+
+```sh
 build/follow-test --fixture > "$FERRY_EVIDENCE/fixture-ids.txt" \
   2> "$FERRY_EVIDENCE/fixture-stderr.txt" &
 FERRY_FIXTURE_PID=$!
@@ -33,8 +39,7 @@ printf '%s\n' "$FERRY_FIXTURE_PID" > "$FERRY_EVIDENCE/fixture-pid.txt"
 ```
 
 Wait for `fixture-ids.txt` to contain two nonzero decimal window IDs and for both
-windows to appear on source Space 1. Record the original frontmost app and Space
-with native UI control before starting. The titles are `Ferry follow test: target`
+windows to appear on source Space 1. The titles are `Ferry follow test: target`
 and `Ferry follow test: other window`. Read IDs only after readiness:
 
 ```sh
@@ -49,12 +54,12 @@ location and active Space. After each manual journey, close only this fixture:
 ```sh
 kill -TERM "$FERRY_FIXTURE_PID"
 wait "$FERRY_FIXTURE_PID" || true
-rmdir "${TMPDIR:-/tmp}/ferry-verification-desktop.lock"
 ```
 
-Restore the original app and Space with native UI control, then run the skill's
-cleanup. If fixture startup fails, still stop the PID you started and release
-your lock. Do not launch a second fixture to hide a broken first attempt.
+Restore the original app and Space with native UI control, then release your
+lock with `rmdir "${TMPDIR:-/tmp}/ferry-verification-desktop.lock"` and run the
+skill's cleanup. If fixture startup fails, still clean up the fixture and lock
+from this run.
 
 ## Proof and skip reporting
 

@@ -131,7 +131,8 @@ make test
 make install PREFIX="$HOME/.local"
 ```
 
-`make test` 只检查命令行接口和构建产物的架构、最低系统版本，以及是否链接了 AppKit，不会移动窗口。`make test-follow` 针对后台 `--window` 命令运行真实桌面回归测试。它需要辅助功能权限，且当前显示器上有两个普通 Space；测试会创建临时测试窗口并临时切换 Space，结束后关闭测试窗口并恢复原来的 App。
+`make test` 检查 CLI 输出和退出码、构建产物的架构和最低系统版本、AppKit 链接，以及五个 Raycast 脚本如何查找可执行文件和传入 Space 编号。运行这些检查不会移动窗口。
+`make test-follow` 针对后台 `--window` 命令运行真实桌面回归测试。它需要辅助功能权限，且当前显示器上有两个普通 Space；测试会创建临时测试窗口并临时切换 Space，结束后关闭测试窗口并恢复原来的 App。
 
 ### 升级和卸载
 

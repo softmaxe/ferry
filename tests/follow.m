@@ -10,7 +10,7 @@ extern CFArrayRef SLSCopyManagedDisplaySpaces(int cid);
 extern CFArrayRef SLSCopySpacesForWindows(int cid, int selector, CFArrayRef windows);
 extern int SLSSpaceGetType(int cid, uint64_t sid);
 
-#define SPACE_TYPE_FULLSCREEN 4
+#define SPACE_TYPE_USER 0
 
 static void pump(double seconds)
 {
@@ -27,15 +27,15 @@ static bool wait_for_space(int cid, uint64_t sid)
     return SLSGetActiveSpace(cid) == sid;
 }
 
-static bool window_on_space(int cid, uint32_t wid, uint64_t sid)
+static bool window_only_on_space(int cid, uint32_t wid, uint64_t sid)
 {
-    CFArrayRef spaces = SLSCopySpacesForWindows(cid, 0x7, (CFArrayRef) @[@(wid)]);
-    bool result = spaces && [(NSArray *) spaces containsObject:@(sid)];
-    if (spaces) CFRelease(spaces);
+    NSArray *spaces = (NSArray *) SLSCopySpacesForWindows(cid, 0x7, (CFArrayRef) @[@(wid)]);
+    bool result = [spaces isEqualToArray:@[@(sid)]];
+    [spaces release];
     return result;
 }
 
-static int run_ferry(NSString *binary, uint32_t wid, int index, bool follow)
+static bool run_ferry(NSString *binary, uint32_t wid, int index, bool follow, NSString *expected_action)
 {
     NSTask *task = [[[NSTask alloc] init] autorelease];
     task.launchPath = binary;
@@ -43,9 +43,19 @@ static int run_ferry(NSString *binary, uint32_t wid, int index, bool follow)
                            [@(wid) stringValue], [@(index) stringValue], nil];
     if (!follow) [args addObject:@"--no-follow"];
     task.arguments = args;
+    NSPipe *pipe = [NSPipe pipe];
+    task.standardOutput = pipe;
     [task launch];
+    NSData *output = [pipe.fileHandleForReading readDataToEndOfFile];
+    [[NSFileHandle fileHandleWithStandardOutput] writeData:output];
     [task waitUntilExit];
-    return task.terminationStatus;
+    NSString *verbose = [[[NSString alloc] initWithData:output encoding:NSUTF8StringEncoding] autorelease];
+    if (task.terminationStatus || ![verbose containsString:expected_action]) {
+        fprintf(stderr, "FAIL: ferry exit=%d, expected verbose output containing '%s'\n",
+                task.terminationStatus, expected_action.UTF8String);
+        return false;
+    }
+    return true;
 }
 
 static void run_fixture(void)
@@ -105,20 +115,24 @@ int main(int argc, char **argv)
                 ++index;
                 uint64_t sid = [space[@"id64"] unsignedLongLongValue];
                 if (sid == src) src_index = index;
-                else if (current && !dst && SLSSpaceGetType(cid, sid) != SPACE_TYPE_FULLSCREEN) {
+                else if (current && !dst && SLSSpaceGetType(cid, sid) == SPACE_TYPE_USER) {
                     dst = sid;
                     dst_index = index;
                 }
             }
         }
         if (displays) CFRelease(displays);
-        if (!src_index || !dst_index || SLSSpaceGetType(cid, src) == SPACE_TYPE_FULLSCREEN) {
+        if (!src_index || !dst_index || SLSSpaceGetType(cid, src) != SPACE_TYPE_USER) {
             fputs("SKIP: test-follow requires two normal Spaces on the active display\n", stderr);
             return 77;
         }
 
         NSString *binary = [[NSString stringWithUTF8String:argv[1]] stringByStandardizingPath];
         NSRunningApplication *original = [[[NSWorkspace sharedWorkspace] frontmostApplication] retain];
+        if (!original) {
+            fputs("SKIP: test-follow needs a frontmost application to restore\n", stderr);
+            return 77;
+        }
         AXUIElementRef original_app = AXUIElementCreateApplication(original.processIdentifier);
         AXUIElementRef original_window = NULL;
         AXUIElementCopyAttributeValue(original_app, kAXFocusedWindowAttribute, (CFTypeRef *) &original_window);
@@ -138,36 +152,38 @@ int main(int argc, char **argv)
             pump(0.3);
             restore_app(original, original_window);
             pid_t front = [[[NSWorkspace sharedWorkspace] frontmostApplication] processIdentifier];
-            if (!wid || !other || front == fixture.processIdentifier || front == getpid() ||
-                !window_on_space(cid, wid, src) || !window_on_space(cid, other, src)) {
-                fprintf(stderr, "FAIL: fixture setup: target=%u other=%u front_pid=%d fixture_pid=%d source=%llu target_on_source=%d other_on_source=%d\n",
-                        wid, other, front, fixture.processIdentifier, src,
-                        window_on_space(cid, wid, src), window_on_space(cid, other, src));
+            bool target_on_source = window_only_on_space(cid, wid, src);
+            bool other_on_source = window_only_on_space(cid, other, src);
+            if (!wid || !other || wid == other || front != original.processIdentifier ||
+                SLSGetActiveSpace(cid) != src || !target_on_source || !other_on_source) {
+                fprintf(stderr, "FAIL: fixture setup: target=%u other=%u front_pid=%d expected_pid=%d source=%llu target_on_source=%d other_on_source=%d\n",
+                        wid, other, front, original.processIdentifier, src, target_on_source, other_on_source);
                 return 1;
             }
 
             // The selected window is not the app's key window. Matching only
             // the owning app or its focused window must not satisfy this test.
-            int status = run_ferry(binary, wid, dst_index, true);
+            if (!run_ferry(binary, wid, dst_index, true, @": moved in ")) return 1;
             bool followed = wait_for_space(cid, dst);
-            bool moved = window_on_space(cid, wid, dst);
-            if (status || !moved || !followed || !window_on_space(cid, other, src)) {
-                fprintf(stderr, "FAIL: background --window: exit=%d moved=%d followed=%d active=%llu expected=%llu\n",
-                        status, moved, followed, SLSGetActiveSpace(cid), dst);
+            bool moved = window_only_on_space(cid, wid, dst);
+            if (!moved || !followed || !window_only_on_space(cid, other, src)) {
+                fprintf(stderr, "FAIL: background --window: moved=%d followed=%d active=%llu expected=%llu\n",
+                        moved, followed, SLSGetActiveSpace(cid), dst);
                 return 1;
             }
             puts("ok: background --window moves and follows the selected window");
 
-            status = run_ferry(binary, wid, dst_index, true);
-            if (status || !window_on_space(cid, wid, dst) || SLSGetActiveSpace(cid) != dst) {
+            if (!run_ferry(binary, wid, dst_index, true, @": already there in ")) return 1;
+            if (!window_only_on_space(cid, wid, dst) || SLSGetActiveSpace(cid) != dst) {
                 fputs("FAIL: --window already on the active destination Space\n", stderr);
                 return 1;
             }
             puts("ok: --window already on the active destination Space");
 
-            status = run_ferry(binary, wid, src_index, false);
+            if (!run_ferry(binary, wid, src_index, false, @": moved in ")) return 1;
             pump(0.3);
-            if (status || !window_on_space(cid, wid, src) || SLSGetActiveSpace(cid) != dst) {
+            if (!window_only_on_space(cid, wid, src) || !window_only_on_space(cid, other, src) ||
+                SLSGetActiveSpace(cid) != dst) {
                 fputs("FAIL: --no-follow must move without switching Spaces\n", stderr);
                 return 1;
             }
@@ -175,12 +191,15 @@ int main(int argc, char **argv)
             result = 0;
         } @finally {
             if (fixture.running) {
-                if (wid && !window_on_space(cid, wid, src)) run_ferry(binary, wid, src_index, false);
                 [fixture terminate];
                 [fixture waitUntilExit];
             }
             restore_app(original, original_window);
-            wait_for_space(cid, src);
+            if (!wait_for_space(cid, src) ||
+                [NSWorkspace sharedWorkspace].frontmostApplication.processIdentifier != original.processIdentifier) {
+                fputs("FAIL: could not restore the original app and Space\n", stderr);
+                result = 1;
+            }
             if (original_window) CFRelease(original_window);
             [original release];
         }
